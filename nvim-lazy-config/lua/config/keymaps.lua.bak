@@ -1,0 +1,13 @@
+-- Keymaps are automatically loaded on the VeryLazy event
+-- Default keymaps that are always set: https://github.com/LazyVim/LazyVim/blob/main/lua/lazyvim/config/keymaps.lua
+-- Add any additional keymaps here
+--
+vim.keymap.set("n", "<C-n>e", ":Neotree filesystem reveal left<CR>", {})
+
+-- F5 automatic cpp run
+vim.keymap.set("n", "<F5>", function()
+  vim.cmd("w")
+  vim.cmd("vsplit")
+  vim.cmd("term cd %:p:h && clang++ %:t -o %:t:r && ./%:t:r")
+  vim.cmd("startinsert")
+end, { desc = "Skompiluj i uruchom C++" })
