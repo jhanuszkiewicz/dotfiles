@@ -1,0 +1,134 @@
+/*
+ * Source: u/Bali10050
+ * https://pastebin.com/Wkeb6Njf
+ * Modified by u/Kasetonix
+*/
+
+:root {
+    --bg-dark:  #24283b;
+    --bg-light: #32344a;
+    --fg:       #c0caf5;
+    --accent:   #2ac3de;
+
+    --bgcolor: var(--bg-dark);
+    --bbcolor: var(--bg-light);
+    --stcolor: var(--bg-light);
+    --prcolor: var(--bg-dark);
+    --hpcolor: var(--accent);
+    --ndcolor: var(--bg-light);
+    --tpcolor: var(--fg);
+    --tscolor: var(--fg);
+    --ttcolor: var(--fg);
+
+    --in-content-page-background: var(--bg-dark) !important;
+    --in-content-box-background: var(--bg-light) !important;
+    --in-content-button-border-color: var(--bg-light) !important;
+    --in-content-box-background-odd: var(--bg-dark) !important;
+    --in-content-button-background: var(--bg-light) !important;
+    --in-content-button-background-hover: var(--bg-light) !important;
+    --in-content-button-border-color: var(--bg-dark) !important;
+    --checkbox-checked-bgcolor: var(--bg-dark) !important;
+    --checkbox-checked-hover-bgcolor: var(--accent) !important;
+    --in-content-accent-color: var(--accent) !important;
+    --in-content-button-background-active: var(--bg-light) !important;
+    --in-content-primary-button-background: var(--bg-light) !important;
+    --in-content-primary-button-text-color: var(--fg) !important;
+    --in-content-table-background: var(--bg-dark) !important;
+    --in-content-link-color: var(--accent) !important;
+    --in-content-link-color-hover: var(--accent) !important;
+    --link-color-hover: var(--accent) !important;
+    --link-color: var(--accent) !important;
+    --in-content-background-color: var(--bg-dark) !important;
+    --box-background: var(--bg-light) !important;
+    --card-background-color: var(--bg-light) !important;
+    --in-content-table-header-color: var(--fg) !important;
+    --moz-dialog: var(--bg-dark) !important;
+    --in-content-text-color: var(--fg) !important;
+    --in-content-page-color: var(--fg) !important;
+    --in-content-deemphasized-text: var(--fg) !important;
+    --in-content-border-color: var(--ttcolor) !important;
+    --in-content-button-border-color-hover: var(--bg-light) !important;
+    --checkbox-unchecked-bgcolor: var(--bg-light) !important;
+    --in-content-focus-outline-width: 0px!important;
+    --in-content-primary-button-border-color: var(--bg-light) !important;
+    --in-content-primary-button-background-hover: var(--bg-dark) !important;
+    --in-content-primary-button-background: var(--bg-dark) !important;
+    --in-content-primary-button-background-hover: var(--accent) !important;
+    --in-content-primary-button-border-color: transparent!important;
+    --in-content-box-info-background: var(--bg-light) !important;
+    --message-bar-text-color: var(--bg-light) !important;
+}
+
+:root:-moz-window-inactive{--bgcolor: var(--bg-dark);}
+
+@-moz-document url-prefix(about:){
+    body                                { background-color: var(--bg-dark) !important; }
+    body,html                           { overflow-y: auto !important; font-family: "JetBrainsMono Nerd Font", monospace !important; }
+    .selector                           { background-color: var(--bg-light) !important; border: var(--bg-light) !important; }
+    .rich-icon, .tile, .top-site-icon   { background-color: var(--bg-light) !important; }
+    .section input:checked+.slider      { --newtab-primary-action-background: var(--bg-dark) !important; }
+    .customize-menu                     { border-radius: 5px !important; }
+    .customize-menu .close-button       { border-color: var(--bg-light) !important; }
+    .customize-menu .close-button:hover { background-color: var(--bg-light) !important; border-color: var(--bg-light) !important; }
+    #sponsored-shortcuts                { background-color: var(--bg-dark) !important; }
+    #newtab-personalize-icon-label      { color: var(--hpcolor ) !important; }
+    #customization-panelWrapper         { max-width: 30em !important; }
+
+    .customize-animate-enter-done,
+    .customize-menu,
+    .top-site-outer:hover,
+    button {
+        background-color: var(--bg-light) !important
+    }
+}
+
+.category-button:not(:hover) { background-color: var(--bg-dark) }
+
+@-moz-document url-prefix(about:addons) {
+    .category:not(:hover) { background-color: var(--bg-dark) !important; }
+}
+
+@-moz-document url-prefix(about:devtools) {
+    #toolbox-container { margin-top: 10px !important; }
+    .devtools-tabbar   { background: transparent !important }
+    .devtools-tab-line { border-radius: 0 0 5px 5px }
+
+    .customize-animate-enter-done,
+    .customize-menu,
+    .top-site-outer:hover,
+    button {
+        background-color: transparent !important
+    }
+}
+
+@-moz-document url("about:home"),
+url("about:newtab") {
+    .mobile-download-promo,
+    .logo-and-wordmark-wrapper,
+    .open-customization-button {
+        display: none !important;
+    }
+
+    body {
+        background: url("bg.png") !important;
+        background-size: cover !important;
+        background-position: center !important;
+    }
+}
+
+@-moz-document url("about:privatebrowsing") {
+    .showPrivate.showSearch.container {
+        display: none !important;
+    }
+
+    body {
+        filter: blur(5px) !important;
+        background: url("bg.png") !important;
+        background-size: cover !important;
+        background-position: center !important;
+    }
+}
+
+@-moz-document url("about:blank") {
+    :root { --in-content-page-background: var(--bg-dark) !important; }
+}

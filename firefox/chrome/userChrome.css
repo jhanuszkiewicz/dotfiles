@@ -1,0 +1,351 @@
+/*
+ * Sources:
+ * u/Bali10050   | https://pastebin.com/vqGZ3Kxj
+ *     Oneline theme, the whole config is based on his
+ * u/thereact0rr | https://www.paste.org/117526
+ *     Tab animations
+ * u/fainas1337  | https://github.com/datguypiko/Firefox-Mod-Blur/tree/master/EXTRA%20MODS/Compact%20extensions%20menu/Style%202
+ *     Extensions menu
+ * u/It_Was_The_Other_Guy
+ *     Snippet changing the tooltips
+ *
+ * Modified by u/Kasetonix
+ * Modified by u/jhanuszkiewicz
+*/
+
+:root {
+    --bg-dark:  #24283b;
+    --bg-light: #32344a;
+    --fg:       #c0caf5;
+    --accent:   #2ac3de;
+}
+
+/*  Removes flash before loading pages  */
+:root { --tabpanel-background-color: var(--toolbar-field-background-color) !important; }
+
+/*  Tab border radius  */
+:root { --tab-border-radius: 3px !important; }
+
+/*  Oneline hack  */
+:root { --navbarWidth: 450pt; --animationSpeed: .15s }
+
+/* Removes the titlebar buttons (minimize, maximize, close) */
+.titlebar-buttonbox-container { display: none }
+
+/* Removes rounded corners */
+:root {
+    --toolbarbutton-border-radius: 0px !important;
+    --tab-border-radius: 0px !important;
+    --arrowpanel-border-radius: 0px !important;
+    --arrowpanel-menuitem-border-radius: 0px !important;
+}
+
+/* Next two sections are for turning the oneline hack
+ * back off when the window is narrow enough */
+@media screen and (min-width:1200px) {
+    #TabsToolbar, #nav-bar { transition: var(--animationSpeed) !important; }
+    #TabsToolbar { margin-left: var(--navbarWidth) !important; }
+
+    :root #nav-bar {
+        margin-top: -44px !important;
+        height: 44px !important;
+        transition: var(--animationSpeed) !important
+    }
+
+    #nav-bar {
+        margin-right: calc(100vw - var(--navbarWidth)) !important;
+        vertical-align: center !important
+    }
+}
+
+@media screen and (max-width:1000px) {
+    #TabsToolbar, #nav-bar { transition: var(--animationSpeed) !important; }
+    toolbarspring{ display: none !important; }
+
+    :root #nav-bar {
+        transition: var(--animationSpeed) !important;
+        padding: 0 80px 0 5px !important;
+    }
+}
+
+#nav-bar, #PersonalToolbar {
+    background-color: #0000 !important;
+    background-image: none !important;
+    box-shadow: none !important;
+}
+
+#nav-bar { margin-left: 3px; }
+
+/*  Removes rounding from the top corners,   */
+#navigator-toolbox {
+    appearance: none !important;
+    border-radius: 0 !important;
+}
+
+#navigator-toolbox-background {
+    background-color: Field !important;
+    background-image: none !important;
+    appearance: none !important;
+    border-radius: 0 !important;
+}
+
+/*  Fixes the customization page  */
+#customization-panelWrapper { max-width: 30em !important; }
+
+/*  Removes annoying buttons and spaces */
+#forward-button,
+#back-button,
+#firefox-view-button,
+#save-to-pocket-button,
+#tracking-protection-icon-container,
+.titlebar-spacer[type="pre-tabs"],
+.titlebar-spacer[type="post-tabs"] {
+    display: none;
+}
+
+#tabbrowser-tabs{ border-inline-start-width: 0 !important; }
+
+/*  Makes some buttons nicer  */
+#PanelUI-menu-button,
+#unified-extensions-button,
+#reload-button,
+#stop-button { padding: 2px !important; }
+
+#reload-button,
+#stop-button{ margin: 1px !important; }
+
+/*  Removes urlbar border/background  */
+#urlbar-background {
+    border: none !important;
+    outline: none !important;
+    transition: .15s !important;
+}
+
+/*  Removes space after pinned tabs  */
+#tabbrowser-tabs[haspinnedtabs]:not([positionpinnedtabs])>#tabbrowser-arrowscrollbox>.tabbrowser-tab[first-visible-unpinned-tab]
+    { margin-inline-start: 0 !important; }
+
+/*  Removes annoying border  */
+#navigator-toolbox { border: none !important; }
+
+/*  Removes the background from the urlbar while not in use  */
+/*
+#urlbar:not(:hover):not([breakout][breakout-extend])>#urlbar-background {
+    box-shadow: none !important;
+    background: #0000 !important;
+}
+*/
+
+/*  Urlbar popup thing  */
+.search-panel-one-offs-header.search-panel-header { display: none !important; }
+#urlbar-anon-search-settings { margin: 0 !important }
+
+.urlbarView-body-outer { margin-bottom: 5px !important; }
+@media screen and (max-width:1000px) {
+    .search-panel-one-offs {
+        display: ruby-base-container !important;
+        height: 56px !important;
+        padding-right: 23px;
+    }
+
+    #urlbar .search-setting-button {
+        position: absolute !important;
+        bottom: 10px;
+        right: 5px
+    }
+}
+
+@media screen and (min-width:1000px) {
+    .search-panel-one-offs { max-height: 23px !important; }
+}
+
+/*  Makes the space between the reload button and the urlbar less akwardly large  */
+#urlbar-container { margin-left: 1px !important; }
+
+/*  Makes the sidebar a little nicer  */
+#sidebar-splitter { display: none; }
+#sidebar-header {
+    padding-bottom: 0 !important;
+    border-bottom: 0 !important;
+}
+
+/*  The thing in the bottom with links  */
+#statuspanel-label {
+    background-color: var(--toolbar-field-background-color) !important;
+    border-color: transparent !important;
+    border-radius: 5px !important;
+    color: currentColor !important;
+    margin: 0 0 2.5px 2px !important;
+    padding: 5px !important;
+    opacity: 100%;
+}
+
+/*  Removes the annoying rainbow thing from the hamburger  */
+#appMenu-fxa-separator { border-image:none !important; }
+
+/*  Navbar buttons order ******  */
+#nav-bar { direction: rtl; }
+#urlbar-container, #customizationui-widget-panel { direction: ltr !important; }
+
+/*  Devtools  */
+.devtools-horizontal-splitter {
+    margin-top: 7px !important;
+    margin-bottom: -12px !important;
+    opacity: 0;
+}
+
+.devtools-toolbox-side-iframe {
+    margin-top: -10px;
+    border-radius: 10px;
+}
+
+.devtools-side-splitter { opacity: 0; }
+
+/*  Removes the reload/stop button  */
+#reload-button, #stop-button { display: none !important }
+
+/*  Customizes the customization page  */
+#customization-container > * {
+    margin-top: -10px;
+    background-color: var(--toolbar-field-background-color) !important;
+}
+
+/*  Fixes the urlbar color on some themes  */
+#urlbar:not([open]) { color: currentColor !important; }
+#urlbar[open] { color: var(--toolbar-field-focus-color); }
+
+/*  Makes sidebars nicer  */
+#sidebar-box {
+    margin-top: -10px !important;
+    border-radius: 10px 10px 0 0 !important;
+}
+
+#sidebar-box > * { background-image: none; }
+
+/*  Drop menus  */
+[position="bottomright topright"] { --panel-border-radius: 0 5px 5px 5px !important; }
+[position="bottomleft topleft"] { --panel-border-radius: 5px 0 5px 5px !important; }
+[part="content"] { border: none !important; }
+.toolbarbutton-1[open] { --toolbarbutton-border-radius: 4px 4px 0 0!important; }
+
+
+/* Make all tabs small except selected one */
+/*
+.tabbrowser-tab[fadein]:not([selected]):not([pinned]) {
+    max-width: 150px !important;
+}
+*/
+
+/* Selected tabs width */
+/*
+.tabbrowser-tab[fadein][selected]:not([pinned]) {
+    min-width: 250px !important;
+}
+*/
+
+/* adaptive tab width */
+.tabbrowser-tab[fadein][selected]:not([pinned]) {
+    width: clamp(100px, 30vw, 250px) !important;
+}
+
+.tabbrowser-tab[fadein]:not([selected]):not([pinned]) {
+    max-width: clamp(100px, 20vw, 150px) !important;
+}
+
+/* Show close button even when mouse hover on inactive tabs */
+#TabsToolbar .tabbrowser-tab:not([selected="true"]):not([pinned]):hover .close-icon{
+    display: -moz-box !important;
+}
+
+/*  Clean and tight extensions menu */
+#unified-extensions-panel #unified-extensions-view {
+    max-width: 200px !important;
+}
+
+#unified-extensions-view{
+    --uei-icon-size: 20px; /*  Change icon size */
+    --firefoxcss-number-of-extensions-in-a-row: 4; /*  Increase to the number of icons you want in one row */
+}
+
+#unified-extensions-view .panel-header,
+#unified-extensions-view .panel-header + toolbarseparator,
+#unified-extensions-view .panel-subview-body + toolbarseparator,
+#unified-extensions-view #unified-extensions-manage-extensions,
+#unified-extensions-view .unified-extensions-item-menu-button.subviewbutton,
+#unified-extensions-view .unified-extensions-item-action-button .unified-extensions-item-contents{
+    display:none !important;
+}
+
+#unified-extensions-view .panel-subview-body {
+    padding:5px !important;
+}
+
+#unified-extensions-view .unified-extensions-item .unified-extensions-item-icon,
+#unified-extensions-view .unified-extensions-item .toolbarbutton-badge-stack {
+    margin-inline-end: 0px !important;
+}
+
+#unified-extensions-view #overflowed-extensions-list,
+#unified-extensions-view #unified-extensions-area,
+#unified-extensions-view .unified-extensions-list {
+    display: grid !important;
+    grid-template-columns: repeat(var(--firefoxcss-number-of-extensions-in-a-row),auto);
+    justify-items:center !important;
+    align-items:center !important;
+}
+
+#unified-extensions-view .unified-extensions-list .unified-extensions-item-action-button {
+     margin-left:2px !important;
+     margin-right:2px !important;
+}
+
+#unified-extensions-view #unified-extensions-area .unified-extensions-item  {
+     margin-left:2px !important;
+     margin-right:2px !important;
+}
+
+#unified-extensions-view .unified-extensions-list .unified-extensions-item,
+#unified-extensions-view .unified-extensions-list{
+     max-width: max-content;
+}
+
+tooltip {
+    -moz-appearance: none !important;
+    background:#24283b !important;
+    color: #c0caf5 !important;
+    font-family: "JetBrainsMono Nerd Font", monospace !important;
+    /* font-family: Victor Mono !important; */
+    font-weight: 600 !important;
+}
+
+/* font change on the bar */
+* {
+    font-family: "JetBrainsMono Nerd Font", monospace !important;
+    /* font-family: Victor Mono !important; */
+    font-size:   10pt !important;
+    font-weight: 600 !important;
+}
+
+/* Remove items from image context menu */
+#context-sendimage,
+#context-sep-setbackground,
+#context-setDesktopBackground,
+#context-inspect-a11y {
+  display: none !important;
+}
+
+.urlbar-visually-hidden {
+    display: none !important;
+}
+
+/* Makes urlbar square */
+:root {
+    --urlbarview-border-radius: 0px !important;
+    --urlbar-border-radius: 0px !important;
+}
+
+/* Fixes the background on search engine picker */
+button#main-button span.button-background.labelled {
+    background: var(--bg-dark) !important;
+    border-radius: 0px !important;
+}
