@@ -22,12 +22,19 @@ sketchybar --default \
   icon.padding_left=4 icon.padding_right=4 \
   label.padding_left=4 label.padding_right=4
 
-# spaces
-for i in 1 2 3 4 5 6 7 8 9
+# workspace'y z paneru
+sketchybar --add event paneru_workspace_change
+
+# listener w tle (najpierw ubijam stary, zeby po reloadzie nie bylo dwoch)
+pkill -f paneru_listener.sh
+"$PLUGIN_DIR/paneru_listener.sh" &
+
+for sid in 1 2 3 4 5
 do
-  sketchybar --add space space.$i left \
-    --set space.$i space=$i \
-      icon=$i \
+  sketchybar --add item space.$sid left \
+    --subscribe space.$sid paneru_workspace_change \
+    --set space.$sid \
+      icon=$sid \
       icon.color=$GREY \
       icon.highlight_color=$BLUE \
       background.color=$BG2 \
@@ -35,8 +42,8 @@ do
       background.height=22 \
       background.drawing=off \
       label.drawing=off \
-      script="$PLUGIN_DIR/space.sh" \
-      click_script="yabai -m space --focus $i"
+      click_script="/opt/homebrew/bin/paneru send-cmd window virtualnum $sid" \
+      script="$PLUGIN_DIR/paneru.sh $sid"
 done
 
 # aktywna apka
@@ -57,5 +64,12 @@ sketchybar --add item clock right \
   --set volume icon.color=$PURPLE \
     script="$PLUGIN_DIR/volume.sh" \
   --subscribe volume volume_change
+
+sketchybar --bar position=top \
+                 height=38 \
+                 topmost=on \
+                 y_offset=0 \
+                 margin=0 \
+                 color=0xff1a1b26   # pełne krycie, Tokyo Night bg
 
 sketchybar --update

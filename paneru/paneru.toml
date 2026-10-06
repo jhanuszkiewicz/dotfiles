@@ -1,0 +1,73 @@
+[options]
+focus_follows_mouse = true
+mouse_follows_focus = true
+# im wiecej tym krotsza animacja, usun linijke = bez animacji (najplynniej)
+animation_speed = 28
+preset_column_widths = [0.33, 0.5, 0.66, 1.0]
+menubar_heigth = 38
+
+# odstepy, gora = miejsce na sketchybar
+[padding]
+top = 0
+bottom = 8
+left = 8
+right = 8
+
+# odstepy miedzy oknami
+[windows.wszystkie]
+title = ".*"
+horizontal_padding = 4
+
+# workspace'y
+[decorations]
+workspace_menu_status = true
+workspace_popup_status = true
+
+[bindings]
+# fokus lewo/prawo po pasku, gora/dol w stacku
+window_focus_west = "ctrl + alt - h"
+window_focus_east = "ctrl + alt - l"
+window_focus_north = "ctrl + alt - k"
+window_focus_south = "ctrl + alt - j"
+window_focus_first = "ctrl + alt - a"
+window_focus_last = "ctrl + alt - e"
+
+
+
+# przesuwanie okna
+window_swap_west = "ctrl + alt + shift - h"
+window_swap_east = "ctrl + alt + shift - l"
+
+# rozmiar
+window_resize = "ctrl + alt - r"
+window_shrink = "ctrl + alt + shift - r"
+window_fullwidth = "ctrl + alt - f"
+window_center = "ctrl + alt - c"
+window_manage = "ctrl + alt + shift - space"
+
+# stack (kilka okien w jednej kolumnie)
+window_stack = "ctrl + alt - s"
+window_unstack = "ctrl + alt + shift - s"
+
+# workspace'y (wiersze jak w niri)
+window_virtual_north = "ctrl + alt - u"
+window_virtual_south = "ctrl + alt - d"
+window_virtualnum_1 = "ctrl + alt - 1"
+window_virtualnum_2 = "ctrl + alt - 2"
+window_virtualnum_3 = "ctrl + alt - 3"
+window_virtualnum_4 = "ctrl + alt - 4"
+window_virtualnum_5 = "ctrl + alt - 5"
+
+# przeniesienie okna na workspace i pojscie za nim
+window_virtualmovenum_1 = "ctrl + alt + shift - 1"
+window_virtualmovenum_2 = "ctrl + alt + shift - 2"
+window_virtualmovenum_3 = "ctrl + alt + shift - 3"
+window_virtualmovenum_4 = "ctrl + alt + shift - 4"
+window_virtualmovenum_5 = "ctrl + alt + shift - 5"
+
+quit = "ctrl + alt - q"
+
+[windows.launcher]
+bundle_id = "org.alacritty"
+title = "^launcher$"
+floating = true

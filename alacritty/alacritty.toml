@@ -1,0 +1,11 @@
+[window]
+decorations = "None"
+padding = { x = 12, y = 10 }
+option_as_alt = "OnlyLeft"
+
+[font]
+normal = { family = "JetBrainsMono Nerd Font" } 
+size = 20
+
+[general]
+import = ["~/.dotfiles/alacritty/themes/tokyo_night_storm.toml"]

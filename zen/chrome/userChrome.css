@@ -1,0 +1,110 @@
+/* tokyo night dla zena */
+
+:root {
+  --tn-bg: #24283b;
+  --tn-bg-dark: #1f2335;
+  --tn-bg-hl: #292e42;
+  --tn-fg: #c0caf5;
+  --tn-fg-dark: #a9b1d6;
+  --tn-comment: #565f89;
+  --tn-blue: #7aa2f7;
+  --tn-border: #414868;
+
+  /* zmien na czcionke z terminala */
+  --tn-font: "JetBrainsMono Nerd Font", "JetBrains Mono", monospace;
+
+  /* kolory zena */
+  --zen-colors-primary: var(--tn-bg-hl) !important;
+  --zen-primary-color: var(--tn-blue) !important;
+  --zen-colors-secondary: var(--tn-bg-hl) !important;
+  --zen-colors-tertiary: var(--tn-bg-dark) !important;
+  --zen-colors-border: var(--tn-border) !important;
+  --zen-themed-toolbar-bg: var(--tn-bg-dark) !important;
+  --zen-main-browser-background: var(--tn-bg-dark) !important;
+
+  /* kolory firefoxa ktore zen dalej uzywa */
+  --toolbar-bgcolor: var(--tn-bg) !important;
+  --toolbar-color: var(--tn-fg) !important;
+  --toolbox-bgcolor-inactive: var(--tn-bg-dark) !important;
+  --toolbarbutton-icon-fill: var(--tn-fg-dark) !important;
+  --lwt-text-color: var(--tn-fg) !important;
+  --tab-selected-textcolor: var(--tn-fg) !important;
+  --toolbar-field-color: var(--tn-fg) !important;
+  --toolbar-field-focus-color: var(--tn-fg) !important;
+  --arrowpanel-background: var(--tn-bg) !important;
+  --arrowpanel-color: var(--tn-fg) !important;
+  --sidebar-text-color: var(--tn-fg-dark) !important;
+  --lwt-sidebar-text-color: var(--tn-fg-dark) !important;
+  --lwt-sidebar-background-color: var(--tn-bg-dark) !important;
+  --newtab-background-color: var(--tn-bg) !important;
+  --newtab-text-primary-color: var(--tn-fg) !important;
+
+  /* ostre rogi i mniejszy odstep wokol strony */
+  --zen-border-radius: 0px !important;
+  --zen-element-separation: 4px !important;
+}
+
+/* czcionka z terminala w calym ui */
+#navigator-toolbox,
+#zen-sidebar-top-buttons,
+menupopup,
+panel,
+.urlbarView {
+  font-family: var(--tn-font) !important;
+}
+
+/* tla paskow */
+#TabsToolbar,
+#titlebar,
+#zen-appcontent-navbar-container {
+  background-color: var(--tn-bg-dark) !important;
+}
+
+.urlbar-background {
+  background-color: var(--tn-bg) !important;
+  border-radius: 0 !important;
+}
+
+.urlbarView-url {
+  color: var(--tn-blue) !important;
+}
+
+/* aktywna karta - niebieska kreska z lewej */
+.tabbrowser-tab[selected] .tab-background {
+  box-shadow: inset 2px 0 0 var(--tn-blue) !important;
+  border-radius: 0 !important;
+}
+
+/* nieaktywne karty przygaszone */
+.tabbrowser-tab:not([selected]) .tab-label {
+  color: var(--tn-comment) !important;
+}
+
+.tab-background {
+  border-radius: 0 !important;
+}
+
+/* bez przyciskow macos (zamknij / zminimalizuj / pelny ekran) */
+.titlebar-buttonbox-container {
+  display: none !important;
+}
+
+/* strona bez zaokraglen i bez odstepu od krawedzi okna */
+:root {
+  --zen-native-inner-radius: 0px !important;
+  --zen-border-radius: 0px !important;
+  --zen-element-separation: 0px !important;
+}
+
+#tabbrowser-tabpanels,
+.browserSidebarContainer,
+.browserContainer,
+browser {
+  border-radius: 0 !important;
+}
+
+/* tlo pod strona w kolorze tokyo night zamiast szarego */
+#tabbrowser-tabpanels,
+browser {
+  background-color: #24283b !important;
+}

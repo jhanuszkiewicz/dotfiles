@@ -1,0 +1,17 @@
+/* ciemne tlo na nowej karcie i pustych stronach, zeby nie bylo bialego blysku */
+
+@-moz-document url("about:newtab"), url("about:home"), url("about:blank") {
+  body {
+    background-color: #24283b !important;
+    color: #c0caf5 !important;
+  }
+}
+
+@-moz-document url("about:newtab"), url("about:home"), url("about:blank") {
+  :root {
+    --newtab-background-color: #24283b !important;
+  }
+  html {
+    background-color: #24283b !important;
+  }
+}

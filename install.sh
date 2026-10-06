@@ -3,7 +3,7 @@
 
 DOT=~/.dotfiles
 
-for p in yabai skhd sketchybar borders ghostty btop bat nvim
+for p in paneru aerospace sketchybar borders ghostty btop bat nvim
 do
   if [ -e ~/.config/$p ] && [ ! -L ~/.config/$p ]; then
     echo "pomijam $p - w ~/.config jest prawdziwy folder, przenies go recznie"
