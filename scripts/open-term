@@ -1,0 +1,7 @@
+#!/bin/sh
+# opens a new terminal window - which app depends on the active preset (~/.dotfiles/term/app)
+
+app=$(cat "$HOME/.dotfiles/term/app" 2>/dev/null)
+[ -z "$app" ] && app=Ghostty
+
+open -na "$app"

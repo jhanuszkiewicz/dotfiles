@@ -1,0 +1,44 @@
+{
+  "title": "disabling annoying macOS shortcuts",
+  "rules": [
+    {
+      "description": "disable cmd+h, cmd+opt+h, cmd+m",
+      "manipulators": [
+        { "type": "basic", "from": { "key_code": "h", "modifiers": { "mandatory": ["command"] } }, "to": [{ "key_code": "vk_none" }] },
+        { "type": "basic", "from": { "key_code": "h", "modifiers": { "mandatory": ["command", "option"] } }, "to": [{ "key_code": "vk_none" }] },
+        { "type": "basic", "from": { "key_code": "m", "modifiers": { "mandatory": ["command"] } }, "to": [{ "key_code": "vk_none" }] }, { "type": "basic", "from": { "key_code": "m", "modifiers": { "mandatory": ["command", "option"] } }, "to": [{ "key_code": "vk_none" }] }
+      ]
+    },
+    {
+      "description": "cmd+q only after doubletap",
+      "manipulators": [
+        {
+          "type": "basic",
+          "from": { "key_code": "q", "modifiers": { "mandatory": ["command"] } },
+          "conditions": [{ "type": "variable_if", "name": "cmd_q", "value": 1 }],
+          "to": [{ "key_code": "q", "modifiers": ["command"] }]
+        },
+        {
+          "type": "basic",
+          "from": { "key_code": "q", "modifiers": { "mandatory": ["command"] } },
+          "to": [{ "set_variable": { "name": "cmd_q", "value": 1 } }],
+          "to_delayed_action": {
+            "to_if_invoked": [{ "set_variable": { "name": "cmd_q", "value": 0 } }],
+            "to_if_canceled": [{ "set_variable": { "name": "cmd_q", "value": 0 } }]
+          }
+        }
+      ]
+    },
+    {
+  "description": "caps lock: click = escape, hold = control",
+  "manipulators": [
+    {
+      "type": "basic",
+      "from": { "key_code": "caps_lock", "modifiers": { "optional": ["any"] } },
+      "to": [{ "key_code": "left_control" }],
+      "to_if_alone": [{ "key_code": "escape" }]
+    }
+  ]
+}
+  ]
+}

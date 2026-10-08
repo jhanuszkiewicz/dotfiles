@@ -1,73 +1,84 @@
 [options]
-focus_follows_mouse = true
+# Disabled: with auto_center on, windows kept sliding under the cursor
+focus_follows_mouse = false
 mouse_follows_focus = true
-# im wiecej tym krotsza animacja, usun linijke = bez animacji (najplynniej)
-animation_speed = 28
+# Disabled: center windows manually with ctrl + alt - c
+auto_center = false
+# Higher value = shorter animation; remove the line to disable animations
+animation_speed = 20
 preset_column_widths = [0.33, 0.5, 0.66, 1.0]
 menubar_heigth = 38
 
-# odstepy, gora = miejsce na sketchybar
+# Outer gaps; top leaves room for SketchyBar
+# Note: horizontal_padding is also added at the left/right screen edges,
+# and half of the 4 px border hides under the window, so only ~2 px shows.
+# Everything is tuned so the visible gap is 16 px on every side.
 [padding]
-top = 0
-bottom = 8
+top = 12
+bottom = 18
 left = 8
 right = 8
 
-# odstepy miedzy oknami
+# Gaps between windows
 [windows.wszystkie]
 title = ".*"
-horizontal_padding = 4
+horizontal_padding = 5
 
-# workspace'y
+# Workspace indicators
 [decorations]
 workspace_menu_status = true
 workspace_popup_status = true
 
 [bindings]
-# fokus lewo/prawo po pasku, gora/dol w stacku
-window_focus_west = "ctrl + alt - h"
-window_focus_east = "ctrl + alt - l"
-window_focus_north = "ctrl + alt - k"
-window_focus_south = "ctrl + alt - j"
-window_focus_first = "ctrl + alt - a"
-window_focus_last = "ctrl + alt - e"
+# Focus: left/right along the strip, up/down within a stack
+window_focus_west = "ctrl + alt - h"                 # Focus window on the left
+window_focus_east = "ctrl + alt - l"                 # Focus window on the right
+window_focus_north = "ctrl + alt - k"                # Focus window above in the stack
+window_focus_south = "ctrl + alt - j"                # Focus window below in the stack
+window_focus_first = "ctrl + alt - a"                # Focus first window on the strip
+window_focus_last = "ctrl + alt - e"                 # Focus last window on the strip
 
+# Move
+window_swap_west = "ctrl + alt + shift - h"          # Move window left
+window_swap_east = "ctrl + alt + shift - l"          # Move window right
 
+# Size
+window_resize = "ctrl + alt - r"                     # Cycle to next preset column width
+window_shrink = "ctrl + alt + shift - r"             # Cycle to previous preset column width
+window_fullwidth = "ctrl + alt - f"                  # Toggle full-width window
+window_center = "ctrl + alt - c"                     # Center window on screen
+window_manage = "ctrl + alt + shift - space"         # Toggle tiling/floating for window
 
-# przesuwanie okna
-window_swap_west = "ctrl + alt + shift - h"
-window_swap_east = "ctrl + alt + shift - l"
+# Stacking: several windows in one column
+window_stack = "ctrl + alt - s"                      # Stack window into adjacent column
+window_unstack = "ctrl + alt + shift - s"            # Unstack window into its own column
 
-# rozmiar
-window_resize = "ctrl + alt - r"
-window_shrink = "ctrl + alt + shift - r"
-window_fullwidth = "ctrl + alt - f"
-window_center = "ctrl + alt - c"
-window_manage = "ctrl + alt + shift - space"
+# Workspaces: vertical rows, as in niri
+window_virtual_north = "ctrl + alt - u"              # Switch to workspace above
+window_virtual_south = "ctrl + alt - d"              # Switch to workspace below
+window_virtualnum_1 = "ctrl + alt - 1"               # Switch to workspace 1
+window_virtualnum_2 = "ctrl + alt - 2"               # Switch to workspace 2
+window_virtualnum_3 = "ctrl + alt - 3"               # Switch to workspace 3
+window_virtualnum_4 = "ctrl + alt - 4"               # Switch to workspace 4
+window_virtualnum_5 = "ctrl + alt - 5"               # Switch to workspace 5
 
-# stack (kilka okien w jednej kolumnie)
-window_stack = "ctrl + alt - s"
-window_unstack = "ctrl + alt + shift - s"
+# Workspaces: move window there and follow it
+window_virtualmovenum_1 = "ctrl + alt + shift - 1"   # Move window to workspace 1 and follow
+window_virtualmovenum_2 = "ctrl + alt + shift - 2"   # Move window to workspace 2 and follow
+window_virtualmovenum_3 = "ctrl + alt + shift - 3"   # Move window to workspace 3 and follow
+window_virtualmovenum_4 = "ctrl + alt + shift - 4"   # Move window to workspace 4 and follow
+window_virtualmovenum_5 = "ctrl + alt + shift - 5"   # Move window to workspace 5 and follow
 
-# workspace'y (wiersze jak w niri)
-window_virtual_north = "ctrl + alt - u"
-window_virtual_south = "ctrl + alt - d"
-window_virtualnum_1 = "ctrl + alt - 1"
-window_virtualnum_2 = "ctrl + alt - 2"
-window_virtualnum_3 = "ctrl + alt - 3"
-window_virtualnum_4 = "ctrl + alt - 4"
-window_virtualnum_5 = "ctrl + alt - 5"
+# Session
+quit = "ctrl + alt - q"                              # Quit Paneru
 
-# przeniesienie okna na workspace i pojscie za nim
-window_virtualmovenum_1 = "ctrl + alt + shift - 1"
-window_virtualmovenum_2 = "ctrl + alt + shift - 2"
-window_virtualmovenum_3 = "ctrl + alt + shift - 3"
-window_virtualmovenum_4 = "ctrl + alt + shift - 4"
-window_virtualmovenum_5 = "ctrl + alt + shift - 5"
-
-quit = "ctrl + alt - q"
-
+# Floating popups: app launcher and shortcut search
 [windows.launcher]
-bundle_id = "org.alacritty"
+bundle_id = "com.mitchellh.ghostty"
 title = "^launcher$"
+floating = true
+
+[windows.keys]
+bundle_id = "com.mitchellh.ghostty"
+title = "^keys$"
 floating = true

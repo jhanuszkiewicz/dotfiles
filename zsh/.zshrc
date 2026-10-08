@@ -16,13 +16,6 @@ unset __conda_setup
 
 export PATH="$HOME/.local/bin:$PATH"
 
-# Added by Antigravity IDE
-export PATH="/Users/jhan/.antigravity-ide/antigravity-ide/bin:$PATH"
-
-# motyw
-export BAT_THEME="tokyonight_night"
-export FZF_DEFAULT_OPTS="--color=bg+:#283457,bg:#1a1b26,border:#27a1b9,fg:#c0caf5,fg+:#c0caf5,gutter:#1a1b26,header:#ff9e64,hl:#2ac3de,hl+:#2ac3de,info:#545c7e,marker:#ff007c,pointer:#ff007c,prompt:#2ac3de,spinner:#ff007c"
-
 eval "$(starship init zsh)"
 eval "$(zoxide init zsh)"
 source <(fzf --zsh)
@@ -30,3 +23,7 @@ source <(fzf --zsh)
 alias ls="eza --icons=auto"
 alias ll="eza -la --icons=auto --git"
 alias lt="eza --tree --level=2 --icons=auto"
+
+export PATH="$HOME/.dotfiles/scripts:$PATH"
+
+export FZF_DEFAULT_OPTS_FILE="$HOME/.dotfiles/fzf/colors"

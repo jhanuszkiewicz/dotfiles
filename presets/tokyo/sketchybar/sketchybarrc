@@ -1,0 +1,111 @@
+#!/bin/bash
+
+PLUGIN_DIR="$CONFIG_DIR/plugins"
+source "$CONFIG_DIR/colors.sh"
+
+# czarny pasek na wysokosc notcha - zlewa sie z notchem i ramka ekranu
+# i zakrywa systemowy menubar ktory wyjezdza po najechaniu myszka
+# pigulki w srodku, boki wyrownane z ramkami okien (16)
+sketchybar --bar position=top height=38 margin=0 y_offset=0 corner_radius=0 \
+  padding_left=16 padding_right=16 \
+  color=$CZARNY blur_radius=0 topmost=on
+
+sketchybar --default \
+  padding_left=0 padding_right=0 \
+  icon.font="JetBrainsMono Nerd Font:Bold:15.0" \
+  label.font="JetBrainsMono Nerd Font:Bold:13.0" \
+  icon.color=$FG label.color=$FG \
+  icon.padding_left=6 icon.padding_right=6 \
+  label.padding_left=0 label.padding_right=8 \
+  background.height=22 background.corner_radius=6
+
+# wyglad pigulki (tlo grupy)
+PILL="background.color=$BG background.corner_radius=9 background.height=28 background.border_width=1 background.border_color=$RAMKA"
+
+# ---------- lewa strona ----------
+
+# niewidoczny item ktory odpala paneru.sh - ten skrypt ustawia
+# naraz workspace'y i pasek okien (jeden skrypt zamiast 13)
+sketchybar --add event paneru_change
+sketchybar --add item paneru left \
+  --set paneru drawing=off updates=on script="$PLUGIN_DIR/paneru.sh" \
+  --subscribe paneru paneru_change front_app_switched system_woke
+
+# listener w tle (najpierw ubijam stary, zeby po reloadzie nie bylo dwoch)
+pkill -f paneru_listener.sh
+"$PLUGIN_DIR/paneru_listener.sh" &
+
+# workspace'y - pokazuja sie tylko te z oknami + aktywny
+for sid in 1 2 3 4 5
+do
+  sketchybar --add item space.$sid left \
+    --set space.$sid \
+      icon=$sid \
+      icon.color=$GREY \
+      icon.padding_left=8 icon.padding_right=8 \
+      label.drawing=off \
+      background.color=$BLUE \
+      background.drawing=off \
+      padding_left=2 padding_right=2 \
+      click_script="/opt/homebrew/bin/paneru send-cmd window virtualnum $sid"
+done
+sketchybar --add bracket spaces '/space\..*/' --set spaces $PILL
+
+# pasek okien z aktywnego workspace'a jak w niri
+# 8 slotow, paneru.sh wypelnia ile trzeba a reszte chowa
+# jak jest sketchybar-app-font to zamiast nazw sa ikonki apek
+if [ -f "$PLUGIN_DIR/icon_map.sh" ]; then
+  WIN_IKONA="icon.font=sketchybar-app-font:Regular:15.0"
+else
+  WIN_IKONA="icon.drawing=off"
+fi
+
+for i in 1 2 3 4 5 6 7 8
+do
+  sketchybar --add item win.$i left \
+    --set win.$i drawing=off $WIN_IKONA \
+      icon.padding_left=8 icon.padding_right=4 \
+      label.padding_left=4 label.padding_right=8 \
+      background.color=$BG2 \
+      background.drawing=off \
+      padding_left=2 padding_right=2
+done
+sketchybar --add bracket okna '/win\..*/' --set okna $PILL
+
+# odstep miedzy pigulkami + luz na koncach
+sketchybar --set space.1 padding_left=3 \
+  --set win.1 padding_left=13
+
+# ---------- prawa strona (dodawane od prawej) ----------
+
+# zegar w osobnej niebieskiej pigulce
+sketchybar --add item clock right \
+  --set clock update_freq=15 \
+    icon= icon.color=$BG \
+    label.color=$BG \
+    icon.padding_left=10 label.padding_right=10 \
+    background.color=$BLUE background.corner_radius=9 background.height=28 \
+    script="$PLUGIN_DIR/clock.sh" \
+  --subscribe clock system_woke
+
+# reszta w jednej pigulce: cpu  wifi  glosnosc  bateria
+sketchybar --add item battery right \
+  --set battery update_freq=120 padding_right=13 \
+    script="$PLUGIN_DIR/battery.sh" \
+  --subscribe battery system_woke power_source_change \
+  --add item volume right \
+  --set volume icon.color=$PURPLE \
+    script="$PLUGIN_DIR/volume.sh" \
+  --subscribe volume volume_change \
+  --add item wifi right \
+  --set wifi update_freq=60 icon.color=$CYAN \
+    script="$PLUGIN_DIR/wifi.sh" \
+  --subscribe wifi wifi_change system_woke \
+  --add item cpu right \
+  --set cpu update_freq=5 icon= icon.color=$YELLOW \
+    icon.padding_left=10 \
+    script="$PLUGIN_DIR/cpu.sh"
+
+sketchybar --add bracket system cpu wifi volume battery --set system $PILL
+
+sketchybar --update

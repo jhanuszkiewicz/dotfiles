@@ -1,0 +1,7 @@
+[user]
+	email = jakub.hanuszkiewicz@gmail.com
+	name = jhan
+[push]
+	autoSetupRemote = true
+[init]
+	defaultBranch = main

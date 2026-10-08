@@ -1,7 +1,15 @@
-# terminal start
+# Terminal
 
-ctrl + alt - return : /Applications/Alacritty.app/Contents/MacOS/alacritty
+# Open new terminal window
+ctrl + alt - return : ~/.dotfiles/scripts/open-term
 
-lalt - return : open -na Alacritty
+# Open new terminal window
+lalt - return : ~/.dotfiles/scripts/open-term
 
+# Launchers
+
+# Toggle app launcher
 alt - space : ~/.dotfiles/scripts/toggle-launcher.sh
+
+# Toggle shortcut search (alt + k is for tmux)
+lalt + shift - k : ~/.dotfiles/scripts/toggle-keys.sh

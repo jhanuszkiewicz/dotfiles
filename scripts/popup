@@ -1,0 +1,46 @@
+#!/bin/sh
+# popup TYTUL KOMENDA SZER WYS
+# otwiera male okno ghostty na srodku aktywnego okna (zwykle terminala)
+# SZER i WYS = ile procent aktywnego okna ma zajac popup
+
+title=$1
+cmd=$2
+W=${3:-60}
+H=${4:-60}
+
+# aktywne okno w punktach: x y szer wys skala gora lewo
+set -- $(osascript -l JavaScript ~/.dotfiles/scripts/front-window.js 2>/dev/null)
+# jakby cos sie wywalilo - caly ekran macbooka
+[ $# -ne 7 ] && set -- 0 0 1800 1169 2 0 0
+x=$1; y=$2; w=$3; h=$4; gora=$6; lewo=$7
+
+pw=$(( w * W / 100 ))
+ph=$(( h * H / 100 ))
+# zeby w waskim oknie nie bylo za ciasno
+[ $pw -lt 500 ] && pw=500
+[ $ph -lt 300 ] && ph=300
+
+# rozmiar jednej kratki (znaku) w punktach dla czcionki z aktywnego presetu
+cell=$(cat ~/.dotfiles/term/cell 2>/dev/null)
+[ -z "$cell" ] && cell="11.45 20.7"
+cw=${cell% *}
+ch=${cell#* }
+
+# ghostty chce rozmiar w kratkach, a nie w punktach
+# 40 i 32 to padding z configu ghostty (20 i 16 z kazdej strony)
+cols=$(awk -v w=$pw -v c=$cw 'BEGIN { printf "%d", (w - 40) / c }')
+lines=$(awk -v h=$ph -v c=$ch 'BEGIN { printf "%d", (h - 32) / c }')
+
+# prawdziwy rozmiar okna po zaokragleniu do kratek, od niego liczymy srodek
+aw=$(awk -v n=$cols -v c=$cw 'BEGIN { printf "%d", n * c + 40 }')
+ah=$(awk -v n=$lines -v c=$ch 'BEGIN { printf "%d", n * c + 32 }')
+px=$(( x + (w - aw) / 2 - lewo ))
+py=$(( y + (h - ah) / 2 - gora ))
+
+# kazdy popup to osobna instancja ghostty, ktora konczy sie razem z komenda
+# --title musi byc pierwszy, bo po nim toggle-* szuka procesu
+exec open -na /Applications/Ghostty.app --args --title="$title" \
+  --window-width=$cols --window-height=$lines \
+  --window-position-x=$px --window-position-y=$py \
+  --window-save-state=never \
+  -e "$cmd"

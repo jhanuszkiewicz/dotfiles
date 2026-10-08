@@ -1,0 +1,21 @@
+#!/bin/sh
+# every new terminal window (ghostty) starts in tmux
+# first window attaches to session "main" (so nothing is lost when you close it),
+# other windows get their own session so they don't mirror the first one
+
+export PATH="/opt/homebrew/bin:$PATH"
+
+# no tmux = plain zsh, so the terminal never just closes on you
+if ! command -v tmux >/dev/null 2>&1; then
+  exec zsh -l
+fi
+
+if tmux has-session -t main 2>/dev/null; then
+  if [ "$(tmux display -p -t main '#{session_attached}')" = "0" ]; then
+    tmux attach -t main || exec zsh -l
+  else
+    tmux new-session || exec zsh -l
+  fi
+else
+  tmux new-session -s main || exec zsh -l
+fi

@@ -1,0 +1,3 @@
+--color=bg:-1,gutter:-1,bg+:#292e42,fg:#c0caf5,fg+:#c0caf5,query:#c0caf5
+--color=hl:#ff9e64,hl+:#ff9e64,prompt:#7dcfff,pointer:#ff007c,marker:#9ece6a,spinner:#9ece6a
+--color=info:#545c7e,header:#565f89,border:#3b4261,separator:#3b4261,scrollbar:#3b4261

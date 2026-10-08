@@ -1,0 +1,29 @@
+# files that go into a preset (paths relative to ~/.dotfiles)
+# a dir ends with / and gets copied as a whole
+# want a preset to change something else too - add it here
+
+sketchybar/
+borders/bordersrc
+ghostty/
+starship/starship.toml
+
+# window gaps are part of the look too, but this file also has your keybinds
+# so it's off by default (uncomment if you want it)
+# paneru/paneru.toml
+
+# tmux colors (tmux.conf itself with keybinds stays out)
+tmux/theme.conf
+
+# which terminal app the shortcuts open
+term/app
+# terminal cell size in points (width height) - popups use it to center themselves
+term/cell
+
+# btop colors (btop.conf points at this file, restart btop after switching)
+btop/themes/preset.theme
+
+# fzf colors (launcher, keys, hswi and fzf in the shell)
+fzf/colors
+
+# bat theme (also used by fzf previews)
+bat/config

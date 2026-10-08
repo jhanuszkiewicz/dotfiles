@@ -1,0 +1,86 @@
+#!/bin/bash
+# keys - search all my shortcuts (skhd + paneru + tmux) in fzf
+#
+#   keys          -> fzf over every shortcut
+#   keys paneru   -> only one source (skhd / paneru / tmux)
+#   enter         -> open the config at that line in nvim
+#
+# descriptions come from the configs themselves:
+#   skhd   - comment line right above the bind
+#   paneru - inline comment after the bind, group = comment above the block
+#   tmux   - the list at the top of tmux.conf ("#   keys   description")
+
+export PATH="/opt/homebrew/bin:$PATH"
+# kolory fzf z aktywnego presetu
+export FZF_DEFAULT_OPTS_FILE="$HOME/.dotfiles/fzf/colors"
+
+DOT="$HOME/.dotfiles"
+SKHD="$DOT/skhd/skhdrc"
+PANERU="$DOT/paneru/paneru.toml"
+TMUX_CONF="$DOT/tmux/tmux.conf"
+
+# every line: source <tab> group <tab> keys <tab> description <tab> file:line
+list_skhd() {
+  awk -v f="$SKHD" '
+    /^#/ { c = substr($0, 3); last = NR; next }
+    /^ *$/ { if (last == NR - 1) group = c; c = ""; next }
+    /:/ {
+      k = $0; sub(/ *:.*/, "", k); gsub(/ - /, " + ", k); sub(/^lalt/, "left alt", k)
+      printf "skhd\t%s\t%s\t%s\t%s:%d\n", group, k, c, f, NR
+      c = ""
+    }' "$SKHD"
+}
+
+list_paneru() {
+  awk -v f="$PANERU" '
+    /^\[/ { inb = ($0 == "[bindings]"); group = "Paneru"; next }
+    !inb { next }
+    /^#/ { group = substr($0, 3); sub(/:.*/, "", group); next }
+    /=/ {
+      split($0, a, "\""); k = a[2]; gsub(/ - /, " + ", k)
+      d = $0; sub(/.*# */, "", d)
+      printf "paneru\t%s\t%s\t%s\t%s:%d\n", group, k, d, f, NR
+    }' "$PANERU"
+}
+
+# tmux nie ma komentarzy przy bindach, wiec bierzemy liste z naglowka configu
+list_tmux() {
+  awk -v f="$TMUX_CONF" '
+    /^# -----/ { exit }
+    /^# [A-Z]/ { group = substr($0, 3); sub(/:.*/, "", group); next }
+    /^#   / {
+      line = substr($0, 5)
+      n = match(line, /   +/)
+      if (n == 0) next
+      k = substr(line, 1, n - 1)
+      d = substr(line, n + RLENGTH)
+      gsub(/prefix \+ /, "ctrl + a, ", k)
+      printf "tmux\t%s\t%s\t%s\t%s:%d\n", group, k, d, f, NR
+    }' "$TMUX_CONF"
+}
+
+all() {
+  case "$1" in
+    skhd)   list_skhd ;;
+    paneru) list_paneru ;;
+    tmux)   list_tmux ;;
+    *)      list_skhd; list_paneru; list_tmux ;;
+  esac
+}
+
+# column layout + colors, file:line stays hidden at the end
+pretty() {
+  awk -F'\t' '{
+    printf "\033[34m%-7s\033[0m \033[90m%-11s\033[0m \033[33m%-27s\033[0m %s\t%s\n",
+      $1, substr($2, 1, 11), $3, $4, $5
+  }'
+}
+
+pick=$(all "$1" | pretty | fzf --ansi --reverse --prompt="key> " \
+  --delimiter='\t' --with-nth=1 --no-sort --tiebreak=index \
+  --header="enter = open in config  |  esc = close")
+
+[ -z "$pick" ] && exit 0
+
+loc=$(printf '%s' "$pick" | cut -f2)
+nvim "+${loc##*:}" "${loc%:*}"

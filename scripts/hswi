@@ -1,0 +1,249 @@
+#!/bin/bash
+# hswi - look preset switcher
+#
+#   hswi          -> fzf menu (saved presets + "add new preset")
+#   hswi name     -> switch straight to preset "name"
+#   hswi --save [name]  -> save current configs into preset "name"
+#                          (no name = the active one)
+#
+# preset = copy of the files listed in presets/files.txt (+ wallpaper) in presets/<name>/
+
+export PATH="/opt/homebrew/bin:$HOME/.cargo/bin:$PATH"
+# kolory fzf z aktywnego presetu
+export FZF_DEFAULT_OPTS_FILE="$HOME/.dotfiles/fzf/colors"
+
+DOT="$HOME/.dotfiles"
+PRE="$DOT/presets"
+LIST="$PRE/files.txt"
+ACTIVE_FILE="$PRE/.active"
+ADD="+ add new preset"
+
+mkdir -p "$PRE"
+
+# ---------- helpers ----------
+
+# paths from files.txt without comments and empty lines
+paths() {
+  grep -v '^#' "$LIST" | grep -v '^ *$'
+}
+
+active() {
+  cat "$ACTIVE_FILE" 2>/dev/null
+}
+
+list_presets() {
+  for d in "$PRE"/*/
+  do
+    [ -d "$d" ] && basename "$d"
+  done
+}
+
+# copies files from $1 to $2 (dirs end with / and get synced as a whole)
+copy() {
+  src="$1"
+  dst="$2"
+  paths | while read -r p
+  do
+    if [ ! -e "$src/$p" ]; then
+      continue
+    fi
+    if [[ "$p" == */ ]]; then
+      mkdir -p "$dst/$p"
+      rsync -a --delete "$src/$p" "$dst/$p"
+    else
+      mkdir -p "$(dirname "$dst/$p")"
+      cp -p "$src/$p" "$dst/$p"
+    fi
+  done
+}
+
+# do the live configs differ from the saved preset
+has_changes() {
+  n="$1"
+  paths | while read -r p
+  do
+    if [ -e "$DOT/$p" ] && ! diff -rq "$DOT/$p" "$PRE/$n/$p" >/dev/null 2>&1; then
+      echo yes
+      break
+    fi
+  done
+}
+
+save_wallpaper() {
+  dst="$1"
+  wp=$(osascript -e 'tell application "System Events" to get picture of current desktop' 2>/dev/null)
+  # old one gets replaced only if we actually got a new one
+  if [ -f "$wp" ]; then
+    rm -f "$dst"/wallpaper.*
+    cp "$wp" "$dst/wallpaper.${wp##*.}"
+  fi
+}
+
+set_wallpaper() {
+  for w in "$PRE/$1"/wallpaper.*
+  do
+    [ -f "$w" ] || continue
+    osascript -e "tell application \"System Events\" to tell every desktop to set picture to \"$w\"" >/dev/null 2>&1
+  done
+}
+
+# fzf preview: description + colors from sketchybar/colors.sh as color blocks
+preview() {
+  n="$1"
+  if [ "$n" = "$ADD" ]; then
+    echo "saves the current look as a new preset"
+    echo
+    echo "files that go into the preset:"
+    paths | sed 's/^/  /'
+    return
+  fi
+
+  [ "$n" = "$(active)" ] && echo "(active)" && echo
+  [ -f "$PRE/$n/description.txt" ] && cat "$PRE/$n/description.txt" && echo
+
+  colors="$PRE/$n/sketchybar/colors.sh"
+  if [ -f "$colors" ]; then
+    grep -E '^[A-Z0-9_]+=0x' "$colors" | while IFS='=' read -r name col
+    do
+      hex=${col:4:6}
+      r=$((16#${hex:0:2}))
+      g=$((16#${hex:2:2}))
+      b=$((16#${hex:4:2}))
+      printf '\033[48;2;%d;%d;%dm      \033[0m  %s  #%s\n' $r $g $b "$name" "$hex"
+    done
+  fi
+
+  ls "$PRE/$n"/wallpaper.* >/dev/null 2>&1 && echo && echo "has a saved wallpaper"
+}
+
+# ---------- actions ----------
+
+reload() {
+  # bar
+  sketchybar --reload 2>/dev/null
+
+  # borders - full restart, because some options (like order) are only read at start
+  if brew services list 2>/dev/null | grep -q '^borders .*started'; then
+    brew services restart borders >/dev/null 2>&1
+  elif [ -x "$DOT/borders/bordersrc" ]; then
+    pkill -x borders
+    sleep 0.3
+    "$DOT/borders/bordersrc" >/dev/null 2>&1 &
+    disown
+  fi
+
+  # ghostty: new windows get the new config (each one is a new instance), starship on the next prompt
+  # tmux if it's running
+  if [ -f "$HOME/.config/tmux/tmux.conf" ] && tmux info >/dev/null 2>&1; then
+    tmux source-file "$HOME/.config/tmux/tmux.conf"
+  fi
+}
+
+switch_to() {
+  n="$1"
+  if [ ! -d "$PRE/$n" ]; then
+    echo "no preset called '$n'"
+    exit 1
+  fi
+
+  # so manual edits in the configs don't get lost
+  cur=$(active)
+  if [ -n "$cur" ] && [ "$cur" != "$n" ] && [ -d "$PRE/$cur" ] && [ -n "$(has_changes "$cur")" ]; then
+    read -r -p "you have unsaved changes in '$cur'. save them to the preset? [y/N] " ans
+    if [ "$ans" = "y" ] || [ "$ans" = "Y" ]; then
+      copy "$DOT" "$PRE/$cur"
+      echo "saved '$cur'"
+    fi
+  fi
+
+  copy "$PRE/$n" "$DOT"
+  echo "$n" > "$ACTIVE_FILE"
+  set_wallpaper "$n"
+  reload
+  echo "active preset: $n"
+}
+
+add() {
+  read -r -p "new preset name: " n
+  # only letters, digits, - and _ so paths don't break
+  if [[ ! "$n" =~ ^[A-Za-z0-9_-]+$ ]]; then
+    echo "bad name (allowed: letters, digits, - and _)"
+    exit 1
+  fi
+  if [ -d "$PRE/$n" ]; then
+    read -r -p "'$n' already exists, overwrite? [y/N] " ans
+    [ "$ans" = "y" ] || [ "$ans" = "Y" ] || exit 0
+  fi
+  read -r -p "short description (enter = none): " desc
+
+  mkdir -p "$PRE/$n"
+  copy "$DOT" "$PRE/$n"
+  save_wallpaper "$PRE/$n"
+  [ -n "$desc" ] && echo "$desc" > "$PRE/$n/description.txt"
+  echo "$n" > "$ACTIVE_FILE"
+  echo "saved the current look as '$n'"
+}
+
+save() {
+  n="$1"
+  if [ -z "$n" ]; then
+    n=$(active)
+  fi
+  if [ -z "$n" ]; then
+    echo "no active preset, give a name: hswi --save name"
+    exit 1
+  fi
+  if [[ ! "$n" =~ ^[A-Za-z0-9_-]+$ ]]; then
+    echo "bad name (allowed: letters, digits, - and _)"
+    exit 1
+  fi
+
+  if [ -d "$PRE/$n" ]; then
+    echo "updating preset '$n'"
+  else
+    echo "no preset '$n' yet, creating it"
+    mkdir -p "$PRE/$n"
+  fi
+
+  copy "$DOT" "$PRE/$n"
+  save_wallpaper "$PRE/$n"
+  echo "$n" > "$ACTIVE_FILE"
+  echo "saved current look to '$n'"
+}
+
+# ---------- start ----------
+
+if [ ! -f "$LIST" ]; then
+  echo "missing $LIST"
+  exit 1
+fi
+
+case "$1" in
+  --preview)
+    preview "$2"
+    exit 0
+    ;;
+  --save)
+    save "$2"
+    exit 0
+    ;;
+  "")
+    ;;
+  *)
+    switch_to "$1"
+    exit 0
+    ;;
+esac
+
+choice=$( { list_presets; echo "$ADD"; } | fzf \
+  --layout=reverse --height=50% --border=rounded \
+  --prompt="preset > " --header="active: $(active)" \
+  --preview="'$0' --preview {}" --preview-window=right,55% )
+
+[ -z "$choice" ] && exit 0
+
+if [ "$choice" = "$ADD" ]; then
+  add
+else
+  switch_to "$choice"
+fi
