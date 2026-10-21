@@ -1,0 +1,61 @@
+# ctl settings tree - one item per line
+#
+#   path <TAB> command [<TAB> state command]
+#
+# path      group/item, groups can go deeper (a/b/item)
+# command   runs in ctl's bash, so the helpers from scripts/ctl work here:
+#           toggle_default, show_default, onoff, pause, resolution, need
+#           open:URL = open that System Settings pane and close ctl
+#           : = do nothing (for items that only show info)
+# state     optional, its first line is shown next to the item
+# item starting with ! = asks "sure?" first
+
+# ---------- display ----------
+display/brightness up	osascript -e 'tell application "System Events" to key code 144'
+display/brightness down	osascript -e 'tell application "System Events" to key code 145'
+display/dark mode	osascript -e 'tell application "System Events" to tell appearance preferences to set dark mode to not dark mode'	onoff "$(osascript -e 'tell application "System Events" to tell appearance preferences to get dark mode')"
+display/night shift	need nightlight smudge/smudge/nightlight && nightlight toggle	command -v nightlight >/dev/null && nightlight status || echo 'not installed'
+display/resolution	resolution	command -v displayplacer >/dev/null && displayplacer list | awk '/^Resolution:/ { print $2; exit }'
+display/open in System Settings	open:x-apple.systempreferences:com.apple.Displays-Settings.extension
+
+# ---------- dock ----------
+dock/auto-hide	osascript -e 'tell application "System Events" to tell dock preferences to set autohide to not autohide'	onoff "$(osascript -e 'tell application "System Events" to tell dock preferences to get autohide')"
+dock/size	read -rp 'dock size (16-128): ' n && defaults write com.apple.dock tilesize -int "$n" && killall Dock	defaults read com.apple.dock tilesize
+dock/recent apps	toggle_default com.apple.dock show-recents 1 Dock	show_default com.apple.dock show-recents 1
+dock/open in System Settings	open:x-apple.systempreferences:com.apple.Desktop-Settings.extension
+
+# ---------- menu bar ----------
+menu bar/auto-hide macos menu bar	osascript -e 'tell application "System Events" to tell dock preferences to set autohide menu bar to not autohide menu bar'	onoff "$(osascript -e 'tell application "System Events" to tell dock preferences to get autohide menu bar')"
+menu bar/open in System Settings	open:x-apple.systempreferences:com.apple.ControlCenter-Settings.extension
+
+# ---------- power ----------
+power/battery	:	pmset -g batt | grep -o '[0-9]*%.*' | cut -d ';' -f1,2
+power/low power mode	v=$(pmset -g | awk '/lowpowermode/ { print $2 }'); sudo pmset -a lowpowermode $((1 - ${v:-0}))	onoff "$(pmset -g | awk '/lowpowermode/ { print $2 }')"
+power/screen off after	read -rp 'minutes (0 = never): ' n && sudo pmset -a displaysleep "$n"	pmset -g | awk '$1 == "displaysleep" { print $2 " min" }'
+power/open in System Settings	open:x-apple.systempreferences:com.apple.Battery-Settings.extension
+
+# ---------- network ----------
+network/ip	:	ipconfig getifaddr en0 || echo 'no ip'
+network/dns	:	networksetup -getdnsservers Wi-Fi | grep -q 'any DNS' && echo automatic || networksetup -getdnsservers Wi-Fi | paste -sd ' ' -
+network/dns automatic	sudo networksetup -setdnsservers Wi-Fi empty
+network/dns cloudflare	sudo networksetup -setdnsservers Wi-Fi 1.1.1.1 1.0.0.1
+network/dns quad9	sudo networksetup -setdnsservers Wi-Fi 9.9.9.9 149.112.112.112
+network/flush dns cache	sudo dscacheutil -flushcache && sudo killall -HUP mDNSResponder && msg flushed
+network/open in System Settings	open:x-apple.systempreferences:com.apple.Network-Settings.extension
+
+# ---------- updates ----------
+updates/check macos updates	softwareupdate -l; pause
+updates/!install macos updates	sudo softwareupdate -ia; pause
+updates/brew upgrade	brew update && brew upgrade; pause
+updates/open in System Settings	open:x-apple.systempreferences:com.apple.Software-Update-Settings.extension
+
+# ---------- the rest just opens System Settings ----------
+system settings/wifi	open:x-apple.systempreferences:com.apple.wifi-settings-extension
+system settings/bluetooth	open:x-apple.systempreferences:com.apple.BluetoothSettings
+system settings/sound	open:x-apple.systempreferences:com.apple.Sound-Settings.extension
+system settings/notifications	open:x-apple.systempreferences:com.apple.Notifications-Settings.extension
+system settings/focus	open:x-apple.systempreferences:com.apple.Focus-Settings.extension
+system settings/keyboard	open:x-apple.systempreferences:com.apple.Keyboard-Settings.extension
+system settings/trackpad	open:x-apple.systempreferences:com.apple.Trackpad-Settings.extension
+system settings/privacy & security	open:x-apple.systempreferences:com.apple.settings.PrivacySecurity.extension
+system settings/general	open:x-apple.systempreferences:com.apple.systempreferences.GeneralSettings

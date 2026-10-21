@@ -1,0 +1,25 @@
+#!/bin/bash
+# pomodoro - timer on the notch island (sketchybar)
+#
+#   pomodoro         -> 25 min
+#   pomodoro 50      -> 50 min
+#   pomodoro stop    -> cancel
+
+FILE="$HOME/.cache/sketchybar/pomodoro"
+mkdir -p "$(dirname "$FILE")"
+
+if [ "$1" = "stop" ]; then
+  rm -f "$FILE"
+  echo "pomodoro stopped"
+else
+  min=${1:-25}
+  if [[ ! "$min" =~ ^[0-9]+$ ]]; then
+    echo "usage: pomodoro [minutes] | pomodoro stop"
+    exit 1
+  fi
+  now=$(date +%s)
+  echo "$now $(( now + min * 60 ))" > "$FILE"
+  echo "pomodoro: $min min"
+fi
+
+sketchybar --trigger island_pomodoro

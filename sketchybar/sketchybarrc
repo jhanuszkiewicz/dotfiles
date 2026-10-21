@@ -1,23 +1,73 @@
 #!/bin/bash
-# minimalist bar - flat grey, named workspaces, battery + clock
+# two flat segments in the terminal bg color on a strip of the wallpaper
+# icons muted, one accent (active workspace + focused window),
+# other colors only for warnings (low battery, high cpu, no wifi)
 
 PLUGIN_DIR="$CONFIG_DIR/plugins"
 source "$CONFIG_DIR/colors.sh"
 
-# same height as the notch so it covers the macos menubar
+# sides line up with window borders (16)
+# transparent bar - only the segments are visible
+# black like before:    PASEK=$CZARNY     ROZMYCIE=0
+# frosted glass:        PASEK=0x66000000  ROZMYCIE=30
+PASEK=0x00000000
+ROZMYCIE=0
+
+# if scripts/bar-wallpaper made a strip of the wallpaper (hswi does it on switch),
+# it becomes the bar background (bracket "tlo" at the end)
+# looks transparent, but it's solid and covers the macos menubar
+BAR_IMG="$HOME/.cache/sketchybar/bar-wallpaper.png"
+TAPETA=0
+if [ -f "$BAR_IMG" ]; then
+  TAPETA=1
+fi
+
 sketchybar --bar position=top height=38 margin=0 y_offset=0 corner_radius=0 \
-  padding_left=16 padding_right=16 \
-  color=$BAR blur_radius=0 topmost=on
+  padding_left=0 padding_right=0 \
+  color=$PASEK blur_radius=$ROZMYCIE topmost=on
+
+# fallback without the strip: hidden item - bar goes black while the mouse is on it, so the macos
+# menubar that slides in at the top edge stays covered (bar_hover.sh)
+# (only without the wallpaper strip)
+if [ $TAPETA = 0 ]; then
+  sketchybar --add item hover left \
+    --set hover drawing=off updates=on script="$PLUGIN_DIR/bar_hover.sh" \
+    --subscribe hover mouse.entered.global mouse.exited.global
+fi
 
 sketchybar --default \
   padding_left=0 padding_right=0 \
   icon.font="JetBrainsMono Nerd Font:Regular:14.0" \
-  label.font="Tamzen8x16:Bold:16.0" \
-  icon.color=$FG label.color=$FG \
+  label.font="JetBrainsMono Nerd Font:Medium:13.0" \
+  icon.color=$GREY label.color=$FG2 \
   icon.padding_left=0 icon.padding_right=6 \
-  label.padding_left=0 label.padding_right=0
+  label.padding_left=0 label.padding_right=0 \
+  background.height=20 background.corner_radius=5
 
-# hidden item that runs paneru.sh on workspace / window changes
+# segment = bracket background, same color as the terminal, no border
+SEG="background.color=$BG background.corner_radius=8 background.height=26 background.drawing=on"
+
+# empty item, just space at the ends of a segment
+# (a single space as label, otherwise sketchybar skips items without content)
+pad() {
+  sketchybar --add item "$1" "$2" \
+    --set "$1" icon.drawing=off label=" " label.width=$3 \
+      label.padding_left=0 label.padding_right=0
+}
+
+# thin vertical line between groups in a segment
+sep() {
+  sketchybar --add item "$1" "$2" \
+    --set "$1" icon.drawing=off label=" " label.width=1 \
+      label.padding_left=0 label.padding_right=0 \
+      padding_left=10 padding_right=10 \
+      background.drawing=on background.color=$RAMKA \
+      background.height=14 background.corner_radius=0
+}
+
+# ---------- left: workspaces | windows ----------
+
+# hidden item that runs paneru.sh (workspaces + window strip in one go)
 sketchybar --add event paneru_change
 sketchybar --add item paneru left \
   --set paneru drawing=off updates=on script="$PLUGIN_DIR/paneru.sh" \
@@ -26,30 +76,147 @@ sketchybar --add item paneru left \
 # kill the old listener first so a reload doesn't start a second one
 pkill -f paneru_listener.sh
 "$PLUGIN_DIR/paneru_listener.sh" &
+# empty-space (fresh terminal after the last window on a workspace closes) is off -
+# it queried paneru on every focus change too. pkill stays so a running one gets stopped
+pkill -f scripts/empty-space
+# "$HOME/.dotfiles/scripts/empty-space" &
 
-# workspace names - change them here
-names=(term web code chat misc)
-icons=(    )
+# 16 pt from the screen edge (instead of bar padding, so the background reaches the edges)
+pad brzeg.l left 16
+pad gap.l0 left 6
 
-for i in 0 1 2 3 4
+# workspaces as dots, the active one stretched into a pill (like niri / gnome)
+# label is just a space so the item has content - only the background is visible,
+# label.width sets the size (paneru.sh changes it, animated)
+for sid in 1 2 3 4 5
 do
-  sid=$((i+1))
   sketchybar --add item space.$sid left \
     --set space.$sid \
-      icon="${icons[$i]}" label="${names[$i]}" \
-      icon.color=$DIM label.color=$DIM \
-      padding_right=20 \
+      icon.drawing=off \
+      label=" " label.width=8 \
+      label.padding_left=0 label.padding_right=0 \
+      background.drawing=on background.color=$RAMKA \
+      background.height=8 background.corner_radius=4 \
+      padding_left=4 padding_right=4 \
       click_script="/opt/homebrew/bin/paneru send-cmd window virtualnum $sid"
 done
 
-# right side: battery + clock
+sep sep.l left
+
+# window strip of the active workspace, 8 slots, paneru.sh hides the unused ones
+# with sketchybar-app-font there are app icons instead of names
+if [ -f "$PLUGIN_DIR/icon_map.sh" ]; then
+  WIN_IKONA="icon.font=sketchybar-app-font:Regular:14.0"
+else
+  WIN_IKONA="icon.drawing=off"
+fi
+
+for i in 1 2 3 4 5 6 7 8
+do
+  sketchybar --add item win.$i left \
+    --set win.$i drawing=off $WIN_IKONA \
+      icon.padding_left=6 icon.padding_right=6 \
+      label.padding_left=0 label.padding_right=8 \
+      background.color=$BG2 \
+      background.drawing=off \
+      padding_left=1 padding_right=1
+done
+
+pad gap.l1 left 3
+
+
+# ---------- right: cpu (icon + %, graph on click), wifi, volume slider, battery | date time ----------
+# (items on the right are added from the right edge)
+# no numbers when everything is fine - they show up only for warnings
+# and for a moment when the volume changes
+
+pad brzeg.r right 16
+pad gap.r1 right 12
+
 sketchybar --add item clock right \
-  --set clock update_freq=15 icon= \
+  --set clock update_freq=15 \
+    label.font="JetBrainsMono Nerd Font:Bold:13.0" \
+    label.color=$FG \
+    icon.drawing=off \
     script="$PLUGIN_DIR/clock.sh" \
   --subscribe clock system_woke \
-  --add item battery right \
-  --set battery update_freq=120 padding_right=20 \
+  --add item date right \
+  --set date icon.drawing=off label.color=$GREY padding_right=8 \
+    label.padding_left=0
+
+sep sep.r right
+
+# battery - bigger classic battery icon + % (battery.sh picks the icon by level)
+sketchybar --add item battery right \
+  --set battery update_freq=120 \
+    icon.font="JetBrainsMono Nerd Font:Regular:19.0" \
+    icon.color=$GREY icon.padding_right=6 icon.y_offset=1 \
+    label.color=$FG2 \
     script="$PLUGIN_DIR/battery.sh" \
   --subscribe battery system_woke power_source_change
 
+# volume: icon + short slider showing the level
+# (on change the notch island shows the value). display only - no mouse.clicked,
+# so clicking or dragging it does nothing (no accidental volume changes)
+sketchybar --add item vol_txt right \
+  --set vol_txt icon.drawing=off label="0%" label.width=0 \
+    label.align=left label.color=0x00000000 padding_right=14 \
+  --add slider volume right 40 \
+  --set volume \
+    icon.drawing=off label.drawing=off \
+    slider.highlight_color=$FG2 \
+    slider.knob.drawing=off \
+    slider.background.height=3 \
+    slider.background.corner_radius=2 \
+    slider.background.color=$RAMKA \
+    script="$PLUGIN_DIR/volume.sh" \
+  --subscribe volume volume_change \
+  --add item vol_icon right \
+  --set vol_icon padding_right=6 icon.padding_right=0 label.drawing=off \
+    icon.color=$GREY
+
+sketchybar --add item wifi right \
+  --set wifi update_freq=60 padding_right=14 \
+    icon.padding_right=0 label.drawing=off \
+    script="$PLUGIN_DIR/wifi.sh" \
+  --subscribe wifi wifi_change system_woke
+
+# cpu: icon + %, click = for 8 s the icon turns into a graph (cpu_click.sh)
+# the graph keeps collecting points while hidden, so it has history when shown
+sketchybar --add graph cpu right 40 \
+  --set cpu drawing=off updates=on update_freq=2 padding_right=14 \
+    icon.drawing=off label.drawing=off \
+    graph.color=$GREY graph.fill_color=0x33${GREY:4} graph.line_width=1.5 \
+    background.drawing=on background.color=0x00000000 background.height=16 \
+    click_script="$PLUGIN_DIR/cpu_click.sh" \
+    script="$PLUGIN_DIR/cpu.sh" \
+  --add item cpu_icon right \
+  --set cpu_icon icon= icon.color=$GREY \
+    label="0%" label.color=$FG2 padding_right=14 \
+    click_script="$PLUGIN_DIR/cpu_click.sh"
+
+pad gap.r0 right 12
+
+
+# ---------- backgrounds (brackets) ----------
+# the ones added first are drawn below, so the wallpaper strip goes first
+
+if [ $TAPETA = 1 ]; then
+  sketchybar --add bracket tlo brzeg.l brzeg.r \
+    --set tlo background.drawing=on background.color=0x00000000 \
+      background.height=38 background.corner_radius=0 \
+      background.image="$BAR_IMG" \
+      background.image.drawing=on background.image.scale=0.5
+fi
+
+sketchybar --add bracket lewa gap.l0 '/space\..*/' sep.l '/win\..*/' gap.l1 \
+  --set lewa $SEG
+
+sketchybar --add bracket prawa gap.r0 cpu_icon cpu wifi vol_icon volume vol_txt battery sep.r date clock gap.r1 \
+  --set prawa $SEG
+
+# dynamic island around the notch
+source "$CONFIG_DIR/island_init.sh"
+
 sketchybar --update
+

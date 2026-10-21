@@ -1,0 +1,27 @@
+# ctl config - sourced by scripts/ctl and scripts/toggle-ctl.sh (plain bash)
+
+# sections in the main menu, in this order
+# available: wifi bt audio focus system settings
+SECTIONS="wifi bt audio focus system settings"
+
+# popup size in % of the active window
+POPUP_W=50
+POPUP_H=50
+
+# wifi interface, empty = find it automatically (usually en0)
+WIFI_DEV=""
+
+# vim keys in the menus: j/k move, g/G top/bottom, l pick, h/q back,
+# / starts searching (esc stops it) - "no" = plain fzf, you just type to search
+VIM_KEYS=yes
+
+# how much volume up / down changes the volume
+VOLUME_STEP=10
+
+# focus: macOS has no command for it, so make two shortcuts in Shortcuts.app
+# ("Set Focus" action -> Do Not Disturb on / off) and put their names here
+FOCUS_ON="Focus on"
+FOCUS_OFF="Focus off"
+
+# note: newer macOS hides the wifi name from the terminal ("?" in the menu)
+# running this once may bring it back:  sudo ipconfig setverbose 1

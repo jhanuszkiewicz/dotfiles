@@ -9,10 +9,12 @@ sketchybar --bar position=top height=38 margin=0 y_offset=0 corner_radius=0 \
   padding_left=16 padding_right=16 \
   color=$BAR blur_radius=0 topmost=on
 
+# other option: label.font="Tamzen8x16:Bold:16.0"
+# icons = pixel icons in tamzen 10x20 (fonts/icons-10x20.txt), the old ones were JetBrainsMono Nerd Font:Regular:14.0
 sketchybar --default \
   padding_left=0 padding_right=0 \
-  icon.font="JetBrainsMono Nerd Font:Regular:14.0" \
-  label.font="Tamzen8x16:Bold:16.0" \
+  icon.font="Tamzen10x20:Bold:20.0" \
+  label.font="Tamzen10x20:Bold:20.0" \
   icon.color=$FG label.color=$FG \
   icon.padding_left=0 icon.padding_right=6 \
   label.padding_left=0 label.padding_right=0
@@ -26,6 +28,10 @@ sketchybar --add item paneru left \
 # kill the old listener first so a reload doesn't start a second one
 pkill -f paneru_listener.sh
 "$PLUGIN_DIR/paneru_listener.sh" &
+# empty-space (fresh terminal after the last window on a workspace closes) is off -
+# it queried paneru on every focus change too. pkill stays so a running one gets stopped
+pkill -f scripts/empty-space
+# "$HOME/.dotfiles/scripts/empty-space" &
 
 # workspace names - change them here
 names=(term web code chat misc)
@@ -42,13 +48,14 @@ do
       click_script="/opt/homebrew/bin/paneru send-cmd window virtualnum $sid"
 done
 
-# right side: battery + clock
+# right side: battery + clock (click = ctl popup)
 sketchybar --add item clock right \
-  --set clock update_freq=15 icon= \
+  --set clock click_script="$HOME/.dotfiles/scripts/toggle-ctl.sh" update_freq=15 icon= \
     script="$PLUGIN_DIR/clock.sh" \
   --subscribe clock system_woke \
   --add item battery right \
   --set battery update_freq=120 padding_right=20 \
+    click_script="$HOME/.dotfiles/scripts/toggle-ctl.sh system" \
     script="$PLUGIN_DIR/battery.sh" \
   --subscribe battery system_woke power_source_change
 

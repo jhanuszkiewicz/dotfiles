@@ -14,7 +14,9 @@ if tmux has-session -t main 2>/dev/null; then
   if [ "$(tmux display -p -t main '#{session_attached}')" = "0" ]; then
     tmux attach -t main || exec zsh -l
   else
-    tmux new-session || exec zsh -l
+    # destroy-unattached: this extra session goes away when its window closes,
+    # so numbered sessions (2, 3, 4...) don't pile up in the background
+    tmux new-session \; set-option destroy-unattached on || exec zsh -l
   fi
 else
   tmux new-session -s main || exec zsh -l

@@ -1,2 +1,6 @@
 .DS_Store
 karabiner/automatic_backups/
+
+# local backups and sketchybar debug logs
+.backup/
+.debug/

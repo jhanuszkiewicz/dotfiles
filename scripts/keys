@@ -1,14 +1,16 @@
 #!/bin/bash
-# keys - search all my shortcuts (skhd + paneru + tmux) in fzf
+# keys - search all my shortcuts (skhd + paneru + tmux + nvim) in fzf
 #
 #   keys          -> fzf over every shortcut
-#   keys paneru   -> only one source (skhd / paneru / tmux)
+#   keys paneru   -> only one source (skhd / paneru / tmux / nvim)
 #   enter         -> open the config at that line in nvim
 #
 # descriptions come from the configs themselves:
 #   skhd   - comment line right above the bind
 #   paneru - inline comment after the bind, group = comment above the block
 #   tmux   - the list at the top of tmux.conf ("#   keys   description")
+#   nvim   - header comments in nvim/lua ("--   <leader>xy   description"),
+#            group = file name
 
 export PATH="/opt/homebrew/bin:$PATH"
 # kolory fzf z aktywnego presetu
@@ -18,6 +20,7 @@ DOT="$HOME/.dotfiles"
 SKHD="$DOT/skhd/skhdrc"
 PANERU="$DOT/paneru/paneru.toml"
 TMUX_CONF="$DOT/tmux/tmux.conf"
+NVIM_LUA="$DOT/nvim/lua"
 
 # every line: source <tab> group <tab> keys <tab> description <tab> file:line
 list_skhd() {
@@ -59,12 +62,33 @@ list_tmux() {
     }' "$TMUX_CONF"
 }
 
+# nvim: only header lines starting with <leader>, so the other cheat-sheet
+# comments in lsp.lua / completion.lua don't get picked up
+list_nvim() {
+  for f in "$NVIM_LUA"/*/*.lua; do
+    awk -v f="$f" '
+      /^--   <leader>/ {
+        line = substr($0, 6)
+        n = match(line, /   +/)
+        if (n == 0) next
+        k = substr(line, 1, n - 1)
+        d = substr(line, n + RLENGTH)
+        sub(/^<leader>/, "", k)
+        out = "space"
+        for (i = 1; i <= length(k); i++) out = out ", " substr(k, i, 1)
+        g = f; sub(/.*\//, "", g); sub(/\.lua$/, "", g)
+        printf "nvim\t%s\t%s\t%s\t%s:%d\n", g, out, d, f, NR
+      }' "$f"
+  done
+}
+
 all() {
   case "$1" in
     skhd)   list_skhd ;;
     paneru) list_paneru ;;
     tmux)   list_tmux ;;
-    *)      list_skhd; list_paneru; list_tmux ;;
+    nvim)   list_nvim ;;
+    *)      list_skhd; list_paneru; list_tmux; list_nvim ;;
   esac
 }
 

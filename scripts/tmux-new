@@ -1,0 +1,11 @@
+#!/bin/sh
+# fresh terminal for empty-space: always a new tmux session (never attaches to "main")
+# destroy-unattached = the session goes away when the window closes, so old sessions don't pile up
+
+export PATH="/opt/homebrew/bin:$PATH"
+
+if ! command -v tmux >/dev/null 2>&1; then
+  exec zsh -l
+fi
+
+tmux new-session \; set-option destroy-unattached on || exec zsh -l

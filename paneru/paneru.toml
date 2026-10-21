@@ -5,29 +5,43 @@ mouse_follows_focus = true
 # Disabled: center windows manually with ctrl + alt - c
 auto_center = false
 # Higher value = shorter animation; remove the line to disable animations
-animation_speed = 20
+# (was 20 - slow ease-out tail, the last few px crawl and that reads as stutter)
+animation_speed = 35
 preset_column_widths = [0.33, 0.5, 0.66, 1.0]
 menubar_heigth = 38
+sliver_width = 0
+# off-screen windows have to stick out a bit or macos moves them back,
+# 0.1 = smallest allowed (only the lower part of the window peeks out), 1 px wide
+sliver_height = 0.1
 
 # Outer gaps; top leaves room for SketchyBar
 # Note: horizontal_padding is also added at the left/right screen edges,
 # and half of the 4 px border hides under the window, so only ~2 px shows.
-# Everything is tuned so the visible gap is 16 px on every side.
+# Values below come from paneru/padding of the active hswi preset (minimalist ~16 px, tokyo ~32 px).
 [padding]
-top = 12
-bottom = 18
-left = 8
-right = 8
+top = 9
+bottom = 28
+left = 17
+right = 17
 
 # Gaps between windows
 [windows.wszystkie]
 title = ".*"
-horizontal_padding = 5
+horizontal_padding = 12
+# every window starts exactly as wide as the space between the side gaps
+# (ratio of the whole screen, so it depends on left/right - hswi sets it from paneru/padding)
+width = 0.9775
 
 # Workspace indicators
 [decorations]
 workspace_menu_status = true
 workspace_popup_status = true
+
+# darkens windows that aren't focused - mainly so the 1 px sliver
+# of off-screen windows (light grey edge of apps like anki) disappears on the dark wallpaper
+[decorations.inactive.dim]
+opacity = 0
+opacity_night = 0
 
 [bindings]
 # Focus: left/right along the strip, up/down within a stack

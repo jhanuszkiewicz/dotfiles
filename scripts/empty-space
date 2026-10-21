@@ -1,0 +1,73 @@
+#!/bin/bash
+# when the last window on a paneru workspace closes, stay on that workspace
+# and open a fresh terminal there (instead of jumping to another non-empty workspace)
+# started from sketchybarrc, same as paneru_listener.sh
+
+export PATH=/opt/homebrew/bin:$HOME/.cargo/bin:$PATH
+
+# one line: "macos_space active total count1 count2 ... count9"
+# only regular windows are counted, floating ones (launcher, keys, popups) are skipped
+get_state() {
+  paneru query state --json 2>/dev/null | jq -r '
+    .active.native_workspace_id as $ws
+    | .active.virtual_workspace_number as $active
+    | [.virtual_workspaces[] | select(.native_workspace_id == $ws)] as $rows
+    | [range(1; 10) as $i
+        | ([$rows[] | select(.number == $i) | [.windows[] | select(.floating | not)] | length] | add // 0)] as $c
+    | "\($ws) \($active) \($c | add) \($c | map(tostring) | join(" "))"'
+}
+
+# new terminal window with a new tmux session (open-term would attach to the old "main")
+fresh_terminal() {
+  app=$(cat "$HOME/.dotfiles/term/app" 2>/dev/null)
+  if [ -z "$app" ] || [ "$app" = "Ghostty" ]; then
+    open -na Ghostty --args --command="$HOME/.dotfiles/scripts/tmux-new"
+  else
+    "$HOME/.dotfiles/scripts/open-term"
+  fi
+}
+
+prev_ws=""
+prev_active=""
+prev_total=0
+prev_counts=()
+
+check() {
+  line=$(get_state)
+  [ -z "$line" ] && return
+  read -r ws active total rest <<< "$line"
+  counts=($rest)
+
+  # same macos space, fewer windows (closed, not moved),
+  # and the workspace I was just on had windows and now is empty
+  if [ -n "$prev_active" ] && [ "$prev_active" != "null" ] && [ "$ws" = "$prev_ws" ] \
+     && [ "$total" -lt "$prev_total" ]; then
+    i=$((prev_active - 1))
+    if [ "${prev_counts[$i]:-0}" -gt 0 ] && [ "${counts[$i]:-0}" -eq 0 ]; then
+      paneru send-cmd window virtualnum "$prev_active" >/dev/null 2>&1
+      sleep 0.15
+      fresh_terminal
+      active=$prev_active
+    fi
+  fi
+
+  prev_ws=$ws
+  prev_active=$active
+  prev_total=$total
+  prev_counts=("${counts[@]}")
+}
+
+while true
+do
+  check
+  paneru subscribe --json 2>/dev/null | while read -r ev
+  do
+    case "$ev" in
+      *windows_changed*|*virtual_workspace_changed*|*window_focused*)
+        check
+        ;;
+    esac
+  done
+  # paneru isn't running or restarted - wait and try again
+  sleep 2
+done

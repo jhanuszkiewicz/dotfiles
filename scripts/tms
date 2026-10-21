@@ -1,0 +1,61 @@
+#!/bin/bash
+# tms - tmux sessionizer
+# wybierasz folder z projektem w fzf -> osobna sesja tmuxa tylko dla niego
+# jak sesja juz istnieje, to tylko sie na nia przelacza
+#
+#   tms          -> fzf z lista projektow
+#   tms folder   -> od razu ten folder (np. tms .)
+
+export PATH="/opt/homebrew/bin:$PATH"
+export FZF_DEFAULT_OPTS_FILE="$HOME/.dotfiles/fzf/colors"
+
+# foldery z projektami w srodku - kazdy podfolder to osobny projekt
+GDZIE="$HOME/CLionProjects $HOME/IdeaProjects $HOME/Projects_cpp $HOME/cpp $HOME/git"
+
+lista() {
+  echo "$HOME/.dotfiles"
+
+  # foldery prosto w domu, bez systemowych
+  for d in "$HOME"/*/
+  do
+    nazwa=$(basename "$d")
+    case "$nazwa" in
+      Applications|Desktop|Documents|Downloads|Library|Movies|Music|Pictures|Public|Templates|config-backup)
+        continue ;;
+    esac
+    echo "${d%/}"
+  done
+
+  for g in $GDZIE
+  do
+    [ -d "$g" ] || continue
+    for d in "$g"/*/
+    do
+      [ -d "$d" ] && echo "${d%/}"
+    done
+  done
+}
+
+if [ -n "$1" ]; then
+  dir=$(cd "$1" && pwd)
+else
+  # w fzf pokazujemy ~ zamiast /Users/jhan, zeby bylo krocej
+  # padding = odstep od ramki popupu, zeby tekst nie kleil sie do krawedzi
+  wybor=$(lista | sed "s|^$HOME|~|" | fzf --reverse --padding=1,2 \
+    --prompt="project> " --header="enter = open session  |  esc = close")
+  [ -z "$wybor" ] && exit 0
+  dir="$HOME${wybor#\~}"
+fi
+
+# tmux nie lubi kropek, dwukropkow i spacji w nazwach sesji
+nazwa=$(basename "$dir" | tr ' .:' '___')
+
+if ! tmux has-session -t="$nazwa" 2>/dev/null; then
+  tmux new-session -d -s "$nazwa" -c "$dir"
+fi
+
+if [ -n "$TMUX" ]; then
+  tmux switch-client -t="$nazwa"
+else
+  tmux attach -t="$nazwa"
+fi

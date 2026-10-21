@@ -1,22 +1,52 @@
-# minimalist prompt:  jhan :: ~/.dotfiles main »
+"$schema" = 'https://starship.rs/config-schema.json'
 
-add_newline = false
-format = "$username[ :: ](#7c7c7c)$directory$git_branch$character"
+# tokyo prompt - lean, no backgrounds:
+#   ~/.dotfiles on  main !1                      14:32
+#   ❯
 
-[username]
-show_always = true
-style_user = "#d5c4a1"
-format = "[$user]($style)"
+format = """
+$directory\
+$git_branch\
+$git_status\
+$cmd_duration\
+$fill\
+$time\
+$line_break\
+$character"""
 
 [directory]
-style = "#d5c4a1"
-format = "[$path]($style) "
+style = "bold #7aa2f7"
+read_only = " ro"
+read_only_style = "#f7768e"
+format = "[$path]($style)[$read_only]($read_only_style) "
 truncation_length = 3
-truncate_to_repo = false
+truncation_symbol = "…/"
 
 [git_branch]
-format = "[$branch](#7c7c7c) "
+symbol = " "
+style = "#a9b1d6"
+format = "[on](#565f89) [$symbol$branch]($style) "
+
+[git_status]
+style = "#e0af68"
+format = "[($all_status$ahead_behind )]($style)"
+
+# only shows up when a command took longer than 2s
+[cmd_duration]
+min_time = 2000
+style = "#e0af68"
+format = "[took $duration]($style) "
+
+[fill]
+symbol = " "
+
+[time]
+disabled = false
+time_format = "%R"
+style = "#565f89"
+format = "[$time]($style)"
 
 [character]
-success_symbol = "[»](#d5c4a1)"
-error_symbol = "[»](#fb4934)"
+success_symbol = "[❯](#9ece6a)"
+error_symbol = "[❯](#f7768e)"
+vimcmd_symbol = "[❮](#9ece6a)"

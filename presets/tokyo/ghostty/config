@@ -2,10 +2,14 @@
 # (only used when the active preset's term/app says Ghostty)
 
 # ---------- window ----------
-# none = no titlebar AND no native border, so macos doesn't round the corners
+# none = no titlebar and square corners (auto + hidden titlebar keeps macos rounded corners)
 window-decoration = none
+macos-titlebar-style = hidden
 window-padding-x = 20
-window-padding-y = 16
+# no padding on top (0), 16 on the bottom - nvim's first row sits right at the top edge
+window-padding-y = 0,16
+# padding takes the color of the nearest cells, so nvim (tree, statusline) reaches the window edge
+window-padding-color = extend
 macos-window-shadow = false
 macos-option-as-alt = left
 confirm-close-surface = false
@@ -15,11 +19,16 @@ quit-after-last-window-closed = true
 command = /Users/jhan/.dotfiles/scripts/tmux-start
 
 # ---------- font ----------
-font-family = JetBrainsMono Nerd Font
-font-size = 18
+font-family = CaskaydiaCove Nerd Font
+font-style = Regular
+font-style-bold = SemiBold
+font-style-italic = Italic
+font-style-bold-italic = SemiBold Italic
+# font-family = JetBrainsMono Nerd Font
+font-size = 17
 
 # ---------- colors (tokyo night storm) ----------
-background = 24283b
+background = 1a1b26
 foreground = a9b1d6
 cursor-color = c0caf5
 selection-background = 364a82
@@ -41,7 +50,14 @@ palette = 13=#bb9af7
 palette = 14=#0db9d7
 palette = 15=#acb0d0
 
+# cursor trail drawn by ghostty itself, so it works everywhere: nvim, shell, across tmux panes
+# (shaders/cursor_warp.glsl, settings like DURATION and TRAIL_SIZE at the top of that file)
+custom-shader = shaders/cursor_warp.glsl
 cursor-style = block
 cursor-style-blink = false
 shell-integration-features = no-cursor
 mouse-hide-while-typing = true
+
+# ---------- keys ----------
+# caps lock = esc/ctrl in karabiner: esc can arrive while ctrl is still held, so treat ctrl+esc as plain esc
+keybind = ctrl+escape=text:\x1b

@@ -15,4 +15,7 @@ done
 
 ln -sf $DOT/starship/starship.toml ~/.config/starship.toml
 ln -sf $DOT/zsh/.zshrc ~/.zshrc
+# launchd doesn't like symlinked plists, so copy them
+mkdir -p ~/Library/LaunchAgents
+cp $DOT/launchd/*.plist ~/Library/LaunchAgents/
 echo "gotowe"

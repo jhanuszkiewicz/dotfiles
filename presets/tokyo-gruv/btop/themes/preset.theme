@@ -1,0 +1,81 @@
+# Theme: tokyo-gruv (tokyo-storm layout, gruvbox dark colors)
+# By: Pascal Jaeger
+
+# Main bg
+theme[main_bg]="#2a2522"
+
+# Main text color
+theme[main_fg]="#ebdbb2"
+
+# Title color for boxes
+theme[title]="#ebdbb2"
+
+# Highlight color for keyboard shortcuts
+theme[hi_fg]="#8ec07c"
+
+# Background color of selected item in processes box
+theme[selected_bg]="#504945"
+
+# Foreground color of selected item in processes box
+theme[selected_fg]="#ebdbb2"
+
+# Color of inactive/disabled text
+theme[inactive_fg]="#665c54"
+
+# Misc colors for processes box including mini cpu graphs, details memory graph and details status text
+theme[proc_misc]="#8ec07c"
+
+# Cpu box outline color
+theme[cpu_box]="#665c54"
+
+# Memory/disks box outline color
+theme[mem_box]="#665c54"
+
+# Net up/down box outline color
+theme[net_box]="#665c54"
+
+# Processes box outline color
+theme[proc_box]="#665c54"
+
+# Box divider line and small boxes line color
+theme[div_line]="#665c54"
+
+# Temperature graph colors
+theme[temp_start]="#b8bb26"
+theme[temp_mid]="#fabd2f"
+theme[temp_end]="#fb4934"
+
+# CPU graph colors
+theme[cpu_start]="#b8bb26"
+theme[cpu_mid]="#fabd2f"
+theme[cpu_end]="#fb4934"
+
+# Mem/Disk free meter
+theme[free_start]="#b8bb26"
+theme[free_mid]="#fabd2f"
+theme[free_end]="#fb4934"
+
+# Mem/Disk cached meter
+theme[cached_start]="#b8bb26"
+theme[cached_mid]="#fabd2f"
+theme[cached_end]="#fb4934"
+
+# Mem/Disk available meter
+theme[available_start]="#b8bb26"
+theme[available_mid]="#fabd2f"
+theme[available_end]="#fb4934"
+
+# Mem/Disk used meter
+theme[used_start]="#b8bb26"
+theme[used_mid]="#fabd2f"
+theme[used_end]="#fb4934"
+
+# Download graph colors
+theme[download_start]="#b8bb26"
+theme[download_mid]="#fabd2f"
+theme[download_end]="#fb4934"
+
+# Upload graph colors
+theme[upload_start]="#b8bb26"
+theme[upload_mid]="#fabd2f"
+theme[upload_end]="#fb4934"

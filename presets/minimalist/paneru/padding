@@ -1,0 +1,8 @@
+# outer gaps for paneru, hswi puts these into [padding] in paneru.toml
+top = 12
+bottom = 18
+left = 8
+right = 8
+between = 5
+# window width = (1512 - left - right) / 1512 on the macbook screen
+width = 0.9894

@@ -1,6 +1,6 @@
 #!/bin/bash
-# odswieza naraz workspace'y i pasek okien na podstawie stanu z paneru
-# potrzebuje jq (brew install jq)
+# refreshes workspaces and the window strip at once, from paneru's state
+# needs jq (brew install jq)
 
 export PATH=/opt/homebrew/bin:$HOME/.cargo/bin:$PATH
 source "$CONFIG_DIR/colors.sh"
@@ -14,21 +14,26 @@ if [ -f "$CONFIG_DIR/plugins/icon_map.sh" ]; then
   IKONY=1
 fi
 
-# wszystkie zmiany zbieram i wysylam jednym wywolaniem sketchybar (bez migania)
+# all changes collected and sent in one sketchybar call (no flicker)
 args=()
 
-# --- workspace'y ---
-# biore tylko te z aktualnego ekranu/space'a macosa
-# linijka = numer, czy aktywny, ile okien (bez plywajacych)
+# --- workspaces ---
+# each of the 5 is a dot: empty = dark, with windows = grey, active = accent pill
+# all empty first, then overwritten with what paneru says
+for nr in 1 2 3 4 5
+do
+  ws[$nr]=pusty
+done
+
+# only the ones from the current screen / macos space
+# line = number, is active, window count (without floating ones)
 while read -r nr aktywny ile
 do
   [ "$nr" -gt 5 ] && continue
   if [ "$aktywny" = "true" ]; then
-    args+=(--set space.$nr drawing=on background.drawing=on icon.color=$BG)
+    ws[$nr]=aktywny
   elif [ "$ile" -gt 0 ]; then
-    args+=(--set space.$nr drawing=on background.drawing=off icon.color=$FG2)
-  else
-    args+=(--set space.$nr drawing=off)
+    ws[$nr]=zajety
   fi
 done < <(echo "$stan" | jq -r '
   .active.native_workspace_id as $ws
@@ -36,12 +41,17 @@ done < <(echo "$stan" | jq -r '
   | select(.native_workspace_id == $ws)
   | "\(.number) \(.active) \([.windows[] | select(.floating | not)] | length)"')
 
-# --- pasek okien ---
+# --- window strip ---
 i=0
 while IFS=$'\t' read -r apka fokus
 do
   i=$((i+1))
   [ $i -gt 8 ] && break
+
+  # ghostty shows up as a plain "Terminal" with a >_ icon
+  if [ "$apka" = "Ghostty" ]; then
+    apka="Terminal"
+  fi
 
   ikona=""
   if [ $IKONY = 1 ]; then
@@ -50,12 +60,12 @@ do
   fi
 
   if [ "$fokus" = "true" ]; then
-    # aktywne okno: podswietlone tlo + nazwa
+    # focused window: highlighted background + name
     args+=(--set win.$i drawing=on icon="$ikona" icon.color=$BLUE
            label="$apka" label.drawing=on label.color=$FG
            background.drawing=on)
   elif [ $IKONY = 1 ]; then
-    # reszta jako same szare ikonki zeby bylo krotko
+    # the rest as grey icons only, to keep it short
     args+=(--set win.$i drawing=on icon="$ikona" icon.color=$GREY
            label.drawing=off background.drawing=off)
   else
@@ -70,17 +80,29 @@ done < <(echo "$stan" | jq -r '
   | select(.floating | not)
   | "\(.app_name)\t\(.focused)"')
 
-# pusty workspace - zeby pigulka nie zniknela
+# empty workspace - so the segment doesn't disappear
 if [ $i = 0 ]; then
   args+=(--set win.1 drawing=on icon="" label="pusto" label.drawing=on
          label.color=$GREY background.drawing=off)
   i=1
 fi
 
-# chowam nieuzywane sloty
+# hide the unused slots
 for j in $(seq $((i+1)) 8)
 do
   args+=(--set win.$j drawing=off)
 done
 
 sketchybar "${args[@]}"
+
+# dots separately, animated - the pill stretches instead of jumping
+kropki=()
+for nr in 1 2 3 4 5
+do
+  case "${ws[$nr]}" in
+    aktywny) kropki+=(--set space.$nr label.width=22 background.color=$BLUE) ;;
+    zajety)  kropki+=(--set space.$nr label.width=8 background.color=$GREY) ;;
+    *)       kropki+=(--set space.$nr label.width=8 background.color=$RAMKA) ;;
+  esac
+done
+sketchybar --animate tanh 12 "${kropki[@]}"

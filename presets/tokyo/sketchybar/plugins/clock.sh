@@ -1,5 +1,6 @@
 #!/bin/sh
-# np. "wed 07.10  15:57" (dzien tygodnia po angielsku, malymi literami)
+# date in a dim item, time in a bright one: "fri 09.10" + "16:32"
 
 dzien=$(LC_ALL=C date '+%a' | tr 'A-Z' 'a-z')
-sketchybar --set "$NAME" label="$dzien $(date '+%d.%m  %H:%M')"
+sketchybar --set date label="$dzien $(date '+%d.%m')" \
+  --set "$NAME" label="$(date '+%H:%M')"

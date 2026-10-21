@@ -1,0 +1,516 @@
+#!/bin/bash
+# ctl - control center in the terminal
+#
+#   ctl            -> main menu
+#   ctl wifi       -> straight to one section (wifi / bt / audio / focus / system / settings)
+#   ctl settings/display  -> straight to a group in settings
+#
+# enter = do it, esc = back (esc in the main menu = quit)
+# vim keys: j/k, g/G, l = pick, h/q = back, / = search (see menu below)
+# configs in ~/.dotfiles/ctl: config, actions (system section), settings (settings tree)
+# needs: brew install fzf jq blueutil switchaudio-osx
+
+export PATH="/opt/homebrew/bin:$PATH"
+export FZF_DEFAULT_OPTS_FILE="$HOME/.dotfiles/fzf/colors"
+
+CFG="$HOME/.dotfiles/ctl"
+START="$HOME/.cache/ctl-start"
+
+# defaults, the config overrides them
+SECTIONS="wifi bt audio focus system settings"
+WIFI_DEV=""
+VOLUME_STEP=10
+VIM_KEYS=yes
+FOCUS_ON="Focus on"
+FOCUS_OFF="Focus off"
+[ -f "$CFG/config" ] && source "$CFG/config"
+
+# ---------- helpers ----------
+
+# menu PROMPT [HEADER]
+# stdin: "value<TAB>text" lines, prints the value of the picked one (nothing on esc)
+#
+# vim keys (VIM_KEYS=yes in ctl/config):
+#   j/k down/up, g/G top/bottom, l or enter pick, h/q/esc back
+#   / = search mode (type to filter), esc leaves it
+menu() {
+  keys=()
+  if [ "$VIM_KEYS" = "yes" ]; then
+    vim="j,k,l,h,q,g,G,/"
+    keys=(
+      --bind "j:down,k:up,g:first,G:last,l:accept,h:abort,q:abort"
+      --bind "/:unbind($vim)+change-prompt($1 / )"
+      --bind "esc:transform:[[ \$FZF_PROMPT == *' / ' ]] && echo 'clear-query+rebind($vim)+change-prompt($1 > )' || echo abort"
+    )
+  fi
+  fzf --reverse --no-sort --info=hidden --prompt="$1 > " --header="$2" \
+    --delimiter='\t' --with-nth=2.. "${keys[@]}" | cut -f1
+}
+
+msg() {
+  echo "$1"
+  sleep 1.5
+}
+
+need() {
+  if ! command -v "$1" >/dev/null 2>&1; then
+    msg "$1 is missing - brew install $2"
+    return 1
+  fi
+}
+
+# lines of a config file without comments and empty lines
+lines() {
+  grep -v '^#' "$1" | grep -v '^ *$'
+}
+
+# ---------- wifi ----------
+
+wifi_dev() {
+  if [ -n "$WIFI_DEV" ]; then
+    echo "$WIFI_DEV"
+  else
+    networksetup -listallhardwareports | awk '/Wi-Fi|AirPort/ { getline; print $2; exit }'
+  fi
+}
+
+wifi_power() {
+  networksetup -getairportpower "$DEV" | awk '{ print $NF }'
+}
+
+# name of the current network, "?" if macos hides it
+wifi_name() {
+  n=$(ipconfig getsummary "$DEV" 2>/dev/null | awk -F ' SSID : ' '/ SSID : / { print $2; exit }')
+  [ "$n" = "<redacted>" ] && n="?"
+  echo "$n"
+}
+
+wifi_join() {
+  echo "connecting to $1..."
+  out=$(networksetup -setairportnetwork "$DEV" "$1" 2>&1)
+  if [ -n "$out" ]; then
+    # no saved password or a wrong one
+    read -rsp "password for $1: " pass
+    echo
+    out=$(networksetup -setairportnetwork "$DEV" "$1" "$pass" 2>&1)
+  fi
+  [ -n "$out" ] && msg "$out"
+}
+
+status_wifi() {
+  if [ "$(wifi_power)" = "On" ]; then
+    n=$(wifi_name)
+    [ -z "$n" ] && n="not connected"
+    echo "on · $n"
+  else
+    echo "off"
+  fi
+}
+
+wifi() {
+  while true
+  do
+    pw=$(wifi_power)
+    cur=$(wifi_name)
+    pick=$(
+      if [ "$pw" = "On" ]; then
+        printf 'off\t  turn wifi off\n'
+        networksetup -listpreferredwirelessnetworks "$DEV" | tail -n +2 | while read -r net
+        do
+          if [ "$net" = "$cur" ]; then
+            printf 'net:%s\t* %s\n' "$net" "$net"
+          else
+            printf 'net:%s\t  %s\n' "$net" "$net"
+          fi
+        done
+        printf 'other\t  other network...\n'
+      else
+        printf 'on\t  turn wifi on\n'
+      fi
+      printf 'settings\t  open wifi settings\n'
+    )
+    pick=$(echo "$pick" | menu wifi "wifi: $(status_wifi)")
+
+    case "$pick" in
+      "") return ;;
+      on) networksetup -setairportpower "$DEV" on ;;
+      off) networksetup -setairportpower "$DEV" off ;;
+      net:*) wifi_join "${pick#net:}" ;;
+      other)
+        read -rp "network name: " name
+        [ -n "$name" ] && wifi_join "$name"
+        ;;
+      settings)
+        open "x-apple.systempreferences:com.apple.wifi-settings-extension"
+        exit 0
+        ;;
+    esac
+  done
+}
+
+# ---------- bluetooth ----------
+
+status_bt() {
+  command -v blueutil >/dev/null 2>&1 || return
+  if [ "$(blueutil --power)" = "1" ]; then
+    echo "on · $(blueutil --connected --format json | jq length) connected"
+  else
+    echo "off"
+  fi
+}
+
+bt() {
+  need blueutil blueutil || return
+  need jq jq || return
+  while true
+  do
+    pick=$(
+      if [ "$(blueutil --power)" = "1" ]; then
+        printf 'off\t  turn bluetooth off\n'
+        # * = connected
+        blueutil --paired --format json | jq -r '.[] |
+          "\(.address)\t\(if .connected then "*" else " " end) \(.name // .address)"'
+      else
+        printf 'on\t  turn bluetooth on\n'
+      fi
+      printf 'settings\t  open bluetooth settings\n'
+    )
+    pick=$(echo "$pick" | menu bluetooth "bluetooth: $(status_bt)")
+
+    case "$pick" in
+      "") return ;;
+      on) blueutil --power 1 ;;
+      off) blueutil --power 0 ;;
+      settings)
+        open "x-apple.systempreferences:com.apple.BluetoothSettings"
+        exit 0
+        ;;
+      *)
+        # a device - connected ones get disconnected and the other way round
+        if [ "$(blueutil --is-connected "$pick")" = "1" ]; then
+          blueutil --disconnect "$pick"
+        else
+          echo "connecting..."
+          blueutil --connect "$pick" || msg "couldn't connect"
+        fi
+        ;;
+    esac
+  done
+}
+
+# ---------- audio ----------
+
+# prints "volume muted", e.g. "40 false"
+volume() {
+  osascript -e 'set s to get volume settings' \
+    -e 'return (output volume of s as text) & " " & (output muted of s as text)'
+}
+
+status_audio() {
+  set -- $(volume)
+  v=$1
+  [ "$2" = "true" ] && v="muted"
+  case "$v" in
+    [0-9]*) v="$v%" ;;
+  esac
+  if command -v SwitchAudioSource >/dev/null 2>&1; then
+    echo "$v · $(SwitchAudioSource -c -t output)"
+  else
+    echo "$v"
+  fi
+}
+
+audio() {
+  need SwitchAudioSource switchaudio-osx || return
+  while true
+  do
+    set -- $(volume)
+    v=$1
+    m=$2
+    # digital outputs (hdmi etc.) have no volume
+    case "$v" in
+      ''|*[!0-9]*) v=0 ;;
+    esac
+    out=$(SwitchAudioSource -c -t output)
+    in=$(SwitchAudioSource -c -t input)
+
+    pick=$(
+      printf 'up\t  volume up\n'
+      printf 'down\t  volume down\n'
+      if [ "$m" = "true" ]; then
+        printf 'unmute\t  unmute\n'
+      else
+        printf 'mute\t  mute\n'
+      fi
+      SwitchAudioSource -a -t output | while IFS= read -r d
+      do
+        if [ "$d" = "$out" ]; then
+          printf 'out:%s\t* out: %s\n' "$d" "$d"
+        else
+          printf 'out:%s\t  out: %s\n' "$d" "$d"
+        fi
+      done
+      SwitchAudioSource -a -t input | while IFS= read -r d
+      do
+        if [ "$d" = "$in" ]; then
+          printf 'in:%s\t* in:  %s\n' "$d" "$d"
+        else
+          printf 'in:%s\t  in:  %s\n' "$d" "$d"
+        fi
+      done
+      printf 'settings\t  open sound settings\n'
+    )
+    pick=$(echo "$pick" | menu audio "audio: $(status_audio)")
+
+    case "$pick" in
+      "") return ;;
+      up)
+        n=$((v + VOLUME_STEP))
+        [ $n -gt 100 ] && n=100
+        osascript -e "set volume output volume $n"
+        ;;
+      down)
+        n=$((v - VOLUME_STEP))
+        [ $n -lt 0 ] && n=0
+        osascript -e "set volume output volume $n"
+        ;;
+      mute) osascript -e 'set volume output muted true' ;;
+      unmute) osascript -e 'set volume output muted false' ;;
+      out:*) SwitchAudioSource -t output -s "${pick#out:}" >/dev/null ;;
+      in:*) SwitchAudioSource -t input -s "${pick#in:}" >/dev/null ;;
+      settings)
+        open "x-apple.systempreferences:com.apple.Sound-Settings.extension"
+        exit 0
+        ;;
+    esac
+  done
+}
+
+# ---------- focus ----------
+
+focus() {
+  pick=$(
+    printf 'on\t  focus on   (shortcut "%s")\n' "$FOCUS_ON"
+    printf 'off\t  focus off  (shortcut "%s")\n' "$FOCUS_OFF"
+    printf 'any\t  run any shortcut...\n'
+    printf 'settings\t  open focus settings\n'
+  )
+  pick=$(echo "$pick" | menu focus)
+
+  case "$pick" in
+    "") return ;;
+    on) shortcuts run "$FOCUS_ON" || msg "no shortcut called \"$FOCUS_ON\" - see ctl/config" ;;
+    off) shortcuts run "$FOCUS_OFF" || msg "no shortcut called \"$FOCUS_OFF\" - see ctl/config" ;;
+    any)
+      s=$(shortcuts list | awk '{ print $0 "\t  " $0 }' | menu shortcut)
+      [ -z "$s" ] && return
+      shortcuts run "$s"
+      ;;
+    settings) open "x-apple.systempreferences:com.apple.Focus-Settings.extension" ;;
+  esac
+  exit 0
+}
+
+# ---------- system (ctl/actions) ----------
+
+system() {
+  pick=$(lines "$CFG/actions" | awk -F '\t' '{ l = $1; sub(/^!/, "", l); print NR "\t  " l }' \
+    | menu system)
+  [ -z "$pick" ] && return
+
+  line=$(lines "$CFG/actions" | sed -n "${pick}p")
+  label=$(echo "$line" | cut -f1)
+  cmd=$(echo "$line" | cut -f2-)
+
+  if [ "${label:0:1}" = "!" ]; then
+    read -rp "${label#!} - sure? [y/N] " ok
+    [ "$ok" != "y" ] && return
+  fi
+  eval "$cmd"
+  exit 0
+}
+
+# ---------- settings (ctl/settings) ----------
+# every line: path <TAB> command [<TAB> state command]
+# path "display/dark mode" = item "dark mode" in group "display"
+
+# small helpers the commands in ctl/settings can use
+
+onoff() {
+  case "$1" in
+    1|true|yes|on|On) echo on ;;
+    *) echo off ;;
+  esac
+}
+
+# show_default DOMAIN KEY DEFAULT -> on / off
+show_default() {
+  v=$(defaults read "$1" "$2" 2>/dev/null)
+  [ -z "$v" ] && v=$3
+  onoff "$v"
+}
+
+# toggle_default DOMAIN KEY DEFAULT [APP to restart]
+toggle_default() {
+  if [ "$(show_default "$1" "$2" "$3")" = "on" ]; then
+    defaults write "$1" "$2" -bool false
+  else
+    defaults write "$1" "$2" -bool true
+  fi
+  [ -n "$4" ] && killall "$4"
+}
+
+pause() {
+  read -rp "enter = back " _
+}
+
+# resolution of the built-in screen (or the first one) with displayplacer
+resolution() {
+  need displayplacer jakehilborn/jakehilborn/displayplacer || return
+  list=$(displayplacer list)
+  block=$(echo "$list" | awk -v RS= '/MacBook built in/ { print; exit }')
+  [ -z "$block" ] && block=$(echo "$list" | awk -v RS= '{ print; exit }')
+
+  id=$(echo "$block" | awk -F ': ' '/^Persistent screen id/ { print $2 }')
+  hz=$(echo "$block" | awk '/^Hertz/ { print $2 }')
+  origin=$(echo "$block" | awk '/^Origin/ { print $2 }')
+  rot=$(echo "$block" | awk '/^Rotation/ { print $2 }')
+
+  # only scaled modes with the current refresh rate, otherwise the list is huge
+  pick=$(echo "$block" | grep 'scaling:on' | grep "hz:$hz " | while read -r line
+  do
+    m=$(echo "$line" | grep -o 'res:[^ ]* hz:[^ ]* color_depth:[^ ]* scaling:on')
+    r=$(echo "$m" | cut -d ' ' -f1)
+    if echo "$line" | grep -q current; then
+      printf '%s\t* %s\n' "$m" "${r#res:}"
+    else
+      printf '%s\t  %s\n' "$m" "${r#res:}"
+    fi
+  done | menu resolution "bigger number = more space, smaller text")
+  [ -z "$pick" ] && return
+
+  displayplacer "id:$id $pick origin:$origin degree:$rot" || pause
+}
+
+# settings_list DIR -> menu lines for one level of the tree
+settings_list() {
+  seen=" "
+  n=0
+  while IFS=$'\t' read -r path cmd state <&3
+  do
+    n=$((n + 1))
+    if [ -n "$1" ]; then
+      case "$path" in
+        "$1"/*) rest=${path#"$1"/} ;;
+        *) continue ;;
+      esac
+    else
+      rest=$path
+    fi
+
+    case "$rest" in
+      */*)
+        # a group - show it once
+        g=${rest%%/*}
+        case "$seen" in
+          *" $g "*) ;;
+          *)
+            seen="$seen$g "
+            printf 'dir:%s\t  %s/\n' "${1:+$1/}$g" "$g"
+            ;;
+        esac
+        ;;
+      *)
+        st=""
+        [ -n "$state" ] && st=$(eval "$state" </dev/null 2>/dev/null | head -1)
+        printf '%s\t  %-24s %s\n' "$n" "${rest#!}" "$st"
+        ;;
+    esac
+  done 3< <(lines "$CFG/settings")
+}
+
+settings_run() {
+  line=$(lines "$CFG/settings" | sed -n "${1}p")
+  path=$(echo "$line" | cut -f1)
+  cmd=$(echo "$line" | cut -f2)
+  label=${path##*/}
+
+  if [ "${label:0:1}" = "!" ]; then
+    read -rp "${label#!} - sure? [y/N] " ok
+    [ "$ok" != "y" ] && return
+  fi
+
+  case "$cmd" in
+    open:*)
+      open "${cmd#open:}"
+      exit 0
+      ;;
+    *)
+      eval "$cmd" || msg "that didn't work"
+      ;;
+  esac
+}
+
+# settings [DIR] - esc goes one level up
+settings() {
+  dir=$1
+  while true
+  do
+    pick=$(settings_list "$dir" | menu "settings${dir:+/$dir}")
+    if [ -z "$pick" ]; then
+      [ -z "$dir" ] && return
+      case "$dir" in
+        */*) dir=${dir%/*} ;;
+        *) dir="" ;;
+      esac
+      continue
+    fi
+    case "$pick" in
+      dir:*) dir=${pick#dir:} ;;
+      *) settings_run "$pick" ;;
+    esac
+  done
+}
+
+# ---------- main ----------
+
+main() {
+  while true
+  do
+    pick=$(
+      for s in $SECTIONS
+      do
+        st=""
+        if declare -F "status_$s" >/dev/null; then
+          st=$("status_$s")
+        fi
+        printf '%s\t%-10s %s\n' "$s" "$s" "$st"
+      done | menu ctl
+    )
+    [ -z "$pick" ] && exit 0
+    "$pick"
+  done
+}
+
+DEV=$(wifi_dev)
+
+# toggle-ctl.sh leaves the section to open in $START
+sec=$1
+if [ -z "$sec" ] && [ -f "$START" ]; then
+  sec=$(cat "$START")
+  rm -f "$START"
+fi
+[ "$sec" = "bluetooth" ] && sec=bt
+
+if [ "${sec%%/*}" = "settings" ] && [ "$sec" != "settings" ]; then
+  settings "${sec#settings/}"
+elif [ -n "$sec" ]; then
+  case " $SECTIONS " in
+    *" $sec "*) "$sec" ;;
+    *)
+      echo "unknown section: $sec (sections: $SECTIONS)"
+      exit 1
+      ;;
+  esac
+fi
+main

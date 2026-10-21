@@ -49,7 +49,9 @@ copy() {
     fi
     if [[ "$p" == */ ]]; then
       mkdir -p "$dst/$p"
-      rsync -a --delete "$src/$p" "$dst/$p"
+      # --checksum: presets often differ only in colors, so the files have the same
+      # size and mtime and plain rsync would skip them as "already up to date"
+      rsync -a --delete --checksum "$src/$p" "$dst/$p"
     else
       mkdir -p "$(dirname "$dst/$p")"
       cp -p "$src/$p" "$dst/$p"
@@ -118,6 +120,40 @@ preview() {
 
 # ---------- actions ----------
 
+# writes values from paneru/padding into the [padding] section of paneru.toml
+# ("between" goes into horizontal_padding of [windows.wszystkie] = gap between windows,
+#  "width" = starting width of every window, also in [windows.wszystkie])
+# (the rest of paneru.toml with keybinds stays untouched)
+set_padding() {
+  pf="$DOT/paneru/padding"
+  toml="$DOT/paneru/paneru.toml"
+  [ -f "$pf" ] && [ -f "$toml" ] || return
+  tmp=$(mktemp)
+  awk -v pf="$pf" '
+    BEGIN {
+      while ((getline line < pf) > 0) {
+        if (line ~ /^#/ || line !~ /=/) continue
+        split(line, a, "=")
+        k = a[1]; v = a[2]
+        gsub(/ /, "", k); gsub(/ /, "", v)
+        val[k] = v
+      }
+    }
+    /^\[/ { sec = $0 }
+    sec == "[padding]" && $1 in val && $2 == "=" { print $1 " = " val[$1]; next }
+    sec == "[windows.wszystkie]" && $1 == "horizontal_padding" && ("between" in val) { print "horizontal_padding = " val["between"]; next }
+    sec == "[windows.wszystkie]" && $1 == "width" && ("width" in val) { print "width = " val["width"]; next }
+    { print }
+  ' "$toml" > "$tmp"
+  # paneru sets window gaps only when a window shows up,
+  # so when they changed restart it so already open windows get them too
+  if ! cmp -s "$tmp" "$toml"; then
+    cat "$tmp" > "$toml"
+    paneru restart >/dev/null 2>&1
+  fi
+  rm -f "$tmp"
+}
+
 reload() {
   # bar
   sketchybar --reload 2>/dev/null
@@ -159,6 +195,16 @@ switch_to() {
   copy "$PRE/$n" "$DOT"
   echo "$n" > "$ACTIVE_FILE"
   set_wallpaper "$n"
+  set_padding
+  # strip of the new wallpaper for the sketchybar background (reload below picks it up)
+  if [ -f "$DOT/scripts/bar-wallpaper" ]; then
+    wp=""
+    for w in "$PRE/$n"/wallpaper.*
+    do
+      [ -f "$w" ] && wp="$w"
+    done
+    WP="$wp" NO_RELOAD=1 bash "$DOT/scripts/bar-wallpaper" >/dev/null 2>&1
+  fi
   reload
   echo "active preset: $n"
 }

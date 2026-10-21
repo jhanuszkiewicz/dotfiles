@@ -13,3 +13,13 @@ alt - space : ~/.dotfiles/scripts/toggle-launcher.sh
 
 # Toggle shortcut search (alt + k is for tmux)
 lalt + shift - k : ~/.dotfiles/scripts/toggle-keys.sh
+
+# Toggle control center (wifi, bluetooth, audio, focus...)
+lalt + shift - c : ~/.dotfiles/scripts/toggle-ctl.sh
+
+# Volume
+
+# Volume keys without the macOS popup - the notch island in sketchybar shows the change
+sound_up : osascript -e 'set volume output volume ((output volume of (get volume settings)) + 6)'
+sound_down : osascript -e 'set volume output volume ((output volume of (get volume settings)) - 6)'
+mute : osascript -e 'set volume output muted (not (output muted of (get volume settings)))'

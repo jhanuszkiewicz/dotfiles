@@ -11,6 +11,9 @@ starship/starship.toml
 # so it's off by default (uncomment if you want it)
 # paneru/paneru.toml
 
+# just the outer gaps - hswi copies them into [padding] in paneru.toml
+paneru/padding
+
 # tmux colors (tmux.conf itself with keybinds stays out)
 tmux/theme.conf
 
@@ -24,6 +27,9 @@ btop/themes/preset.theme
 
 # fzf colors (launcher, keys, hswi and fzf in the shell)
 fzf/colors
+
+# nvim colors + border style (nvim reloads it when you switch back to it)
+nvim/theme.lua
 
 # bat theme (also used by fzf previews)
 bat/config

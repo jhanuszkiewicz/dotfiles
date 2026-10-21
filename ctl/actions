@@ -1,0 +1,13 @@
+# ctl "system" section - one action per line
+# label <TAB> command
+# label starting with ! = asks "sure?" first
+
+lock screen	pmset displaysleepnow
+sleep	pmset sleepnow
+keep awake for 1h	nohup caffeinate -di -t 3600 >/dev/null 2>&1 &
+keep awake until stopped	nohup caffeinate -di >/dev/null 2>&1 &
+stop keeping awake	pkill caffeinate
+empty trash	osascript -e 'tell app "Finder" to empty trash'
+!restart	osascript -e 'tell app "System Events" to restart'
+!shut down	osascript -e 'tell app "System Events" to shut down'
+!log out	osascript -e 'tell app "System Events" to log out'

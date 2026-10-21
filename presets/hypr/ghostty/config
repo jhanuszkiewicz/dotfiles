@@ -1,0 +1,67 @@
+# ghostty - hypr preset
+# (only used when the active preset's term/app says Ghostty)
+
+# ---------- window ----------
+# auto + hidden titlebar = no titlebar, but macos keeps the rounded corners (like hyprland's rounding)
+window-decoration = auto
+macos-titlebar-style = hidden
+window-padding-x = 20
+window-padding-y = 14
+window-padding-color = background
+macos-window-shadow = false
+macos-option-as-alt = left
+confirm-close-surface = false
+quit-after-last-window-closed = true
+
+# see-through glass: wallpaper shows through, blurred
+# (lower opacity = more wallpaper, blur = radius of the frost)
+background-opacity = 0.82
+background-blur = 24
+
+# every window starts in tmux 
+command = /Users/jhan/.dotfiles/scripts/tmux-start
+
+# ---------- font ----------
+font-family = CaskaydiaCove Nerd Font
+font-style = Regular
+font-style-bold = SemiBold
+font-style-italic = Italic
+font-style-bold-italic = SemiBold Italic
+font-size = 17
+
+# ---------- colors (catppuccin mocha) ----------
+background = 1e1e2e
+foreground = cdd6f4
+# mauve cursor = mauve trail from the shader, same accent as borders and bar
+cursor-color = cba6f7
+cursor-text = 1e1e2e
+selection-background = 45475a
+selection-foreground = cdd6f4
+palette = 0=#45475a
+palette = 1=#f38ba8
+palette = 2=#a6e3a1
+palette = 3=#f9e2af
+palette = 4=#89b4fa
+palette = 5=#f5c2e7
+palette = 6=#94e2d5
+palette = 7=#bac2de
+palette = 8=#585b70
+palette = 9=#f38ba8
+palette = 10=#a6e3a1
+palette = 11=#f9e2af
+palette = 12=#89b4fa
+palette = 13=#f5c2e7
+palette = 14=#94e2d5
+palette = 15=#a6adc8
+
+# cursor trail drawn by ghostty itself, so it works everywhere: nvim, shell, across tmux panes
+# (shaders/cursor_warp.glsl - in this preset with the fading tail turned on)
+custom-shader = shaders/cursor_warp.glsl
+cursor-style = block
+cursor-style-blink = false
+shell-integration-features = no-cursor
+mouse-hide-while-typing = true
+
+# ---------- keys ----------
+# caps lock = esc/ctrl in karabiner: esc can arrive while ctrl is still held, so treat ctrl+esc as plain esc
+keybind = ctrl+escape=text:\x1b

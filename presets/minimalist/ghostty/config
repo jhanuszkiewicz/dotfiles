@@ -2,31 +2,27 @@
 # (only used when the active preset's term/app says Ghostty)
 
 # ---------- window ----------
-# none = no titlebar AND no native border, so macos doesn't round the corners
 window-decoration = none
 window-padding-x = 20
 window-padding-y = 16
 macos-window-shadow = false
 macos-option-as-alt = left
 confirm-close-surface = false
-quit-after-last-window-closed = true
+quit-after-last-window-closed = false
 
 # every window starts in tmux
 command = /Users/jhan/.dotfiles/scripts/tmux-start
 
 # ---------- font ----------
-# like the inspo config: Tamzen first, Inconsolata Medium for anything Tamzen doesn't have
 # (Tamzen10x20 = our renamed copy from ~/.dotfiles/fonts, polish letters already inside)
-font-family = Tamzen10x20
+font-family = Tamzen8x16
 font-family = Inconsolata Medium
-font-family-bold = Tamzen10x20
+font-family-bold = Tamzen8x16
 font-family-bold = Inconsolata Medium
 font-style = Bold
 font-style-bold = Bold
-# 20 = tamzen w podwojnej skali pikseli, wiec jest ostry (13 bylo za male)
-font-size = 23
-# = line_height 0.9 from the wezterm config
-adjust-cell-height = -10%
+font-size = 20
+adjust-cell-height = -3
 font-thicken = false
 
 # ---------- colors (gruvbox dark) ----------
@@ -56,3 +52,7 @@ cursor-style = block
 cursor-style-blink = false
 shell-integration-features = no-cursor
 mouse-hide-while-typing = true
+
+# ---------- keys ----------
+# caps lock = esc/ctrl in karabiner: esc can arrive while ctrl is still held, so treat ctrl+esc as plain esc
+keybind = ctrl+escape=text:\x1b

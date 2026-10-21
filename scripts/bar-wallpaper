@@ -1,0 +1,64 @@
+#!/bin/bash
+# bar-wallpaper - cuts the top strip of the current wallpaper for sketchybar
+# so the bar looks transparent, but it's solid and covers the macos menubar
+#
+#   bar-wallpaper        -> strip for a 38 pt bar
+#   bar-wallpaper 40     -> different bar height (in points)
+#
+# result: ~/.cache/sketchybar/bar-wallpaper.png (2x, for retina)
+# kept outside ~/.dotfiles, so hswi doesn't see it as a change in the preset
+# hswi runs this after setting a preset's wallpaper (with NO_RELOAD=1, it reloads by itself)
+
+H_PT=${1:-38}
+OUT="$HOME/.cache/sketchybar/bar-wallpaper.png"
+mkdir -p "$(dirname "$OUT")"
+TMP=$(mktemp -d)
+
+# WP=path lets hswi pass the preset's wallpaper directly - right after setting it,
+# macos still reports the old one for a moment
+wp="$WP"
+if [ -z "$wp" ]; then
+  wp=$(osascript -e 'tell application "System Events" to get picture of current desktop' 2>/dev/null)
+fi
+if [ ! -f "$wp" ]; then
+  echo "can't find the current wallpaper file (got: '$wp')"
+  exit 1
+fi
+
+# screen size in points, e.g. "0, 0, 1512, 982"
+b=$(osascript -e 'tell application "Finder" to get bounds of window of desktop')
+PW=$(echo "$b" | awk -F', ' '{print $3}')
+PH=$(echo "$b" | awk -F', ' '{print $4}')
+
+# everything below is in pixels (retina = 2x)
+W=$((PW * 2))
+H=$((PH * 2))
+BH=$((H_PT * 2))
+
+iw=$(sips -g pixelWidth "$wp" | awk '/pixelWidth/ {print $2}')
+ih=$(sips -g pixelHeight "$wp" | awk '/pixelHeight/ {print $2}')
+
+# macos "fill screen": scale so the image covers the whole screen,
+# then the middle part is visible - same thing here
+nw=$(awk -v iw=$iw -v ih=$ih -v W=$W -v H=$H 'BEGIN {s=W/iw; if (H/ih > s) s=H/ih; printf "%d", iw*s+0.999}')
+nh=$(awk -v iw=$iw -v ih=$ih -v W=$W -v H=$H 'BEGIN {s=W/iw; if (H/ih > s) s=H/ih; printf "%d", ih*s+0.999}')
+offx=$(( (nw - W) / 2 ))
+offy=$(( (nh - H) / 2 ))
+
+sips -s format png -z $nh $nw "$wp" --out "$TMP/full.png" >/dev/null
+# top strip of what's visible on screen
+sips -c $BH $W --cropOffset $offy $offx "$TMP/full.png" --out "$OUT" >/dev/null
+
+rm -rf "$TMP"
+
+if [ ! -f "$OUT" ]; then
+  echo "something went wrong, no $OUT"
+  exit 1
+fi
+
+echo "wallpaper: $wp"
+echo "screen: ${PW}x${PH} pt, image: ${iw}x${ih} -> ${nw}x${nh}, strip ${W}x${BH} from y=$offy"
+echo "saved $OUT"
+if [ "$NO_RELOAD" != "1" ]; then
+  sketchybar --reload
+fi

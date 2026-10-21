@@ -1,0 +1,1 @@
+Tokyo layout in gruvbox dark - wallpaper-strip bar with flat segments, gruvbox recolor of the tokyo wallpaper, click menus (ctl), rounded borders

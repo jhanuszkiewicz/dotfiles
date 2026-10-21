@@ -1,0 +1,52 @@
+"$schema" = 'https://starship.rs/config-schema.json'
+
+# hypr prompt (catppuccin mocha) - lean, no backgrounds:
+#   ~/.dotfiles on  main !1                      14:32
+#   ❯
+
+format = """
+$directory\
+$git_branch\
+$git_status\
+$cmd_duration\
+$fill\
+$time\
+$line_break\
+$character"""
+
+[directory]
+style = "bold #cba6f7"
+read_only = " ro"
+read_only_style = "#f38ba8"
+format = "[$path]($style)[$read_only]($read_only_style) "
+truncation_length = 3
+truncation_symbol = "…/"
+
+[git_branch]
+symbol = " "
+style = "#89b4fa"
+format = "[on](#6c7086) [$symbol$branch]($style) "
+
+[git_status]
+style = "#f9e2af"
+format = "[($all_status$ahead_behind )]($style)"
+
+# only shows up when a command took longer than 2s
+[cmd_duration]
+min_time = 2000
+style = "#f9e2af"
+format = "[took $duration]($style) "
+
+[fill]
+symbol = " "
+
+[time]
+disabled = false
+time_format = "%R"
+style = "#6c7086"
+format = "[$time]($style)"
+
+[character]
+success_symbol = "[❯](#a6e3a1)"
+error_symbol = "[❯](#f38ba8)"
+vimcmd_symbol = "[❮](#a6e3a1)"

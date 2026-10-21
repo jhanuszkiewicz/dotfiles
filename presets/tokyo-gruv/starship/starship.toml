@@ -1,0 +1,52 @@
+"$schema" = 'https://starship.rs/config-schema.json'
+
+# tokyo-gruv prompt - lean, no backgrounds:
+#   ~/.dotfiles on  main !1                      14:32
+#   ❯
+
+format = """
+$directory\
+$git_branch\
+$git_status\
+$cmd_duration\
+$fill\
+$time\
+$line_break\
+$character"""
+
+[directory]
+style = "bold #d5c4a1"
+read_only = " ro"
+read_only_style = "#fb4934"
+format = "[$path]($style)[$read_only]($read_only_style) "
+truncation_length = 3
+truncation_symbol = "…/"
+
+[git_branch]
+symbol = " "
+style = "#a89984"
+format = "[on](#7c6f64) [$symbol$branch]($style) "
+
+[git_status]
+style = "#fabd2f"
+format = "[($all_status$ahead_behind )]($style)"
+
+# only shows up when a command took longer than 2s
+[cmd_duration]
+min_time = 2000
+style = "#fabd2f"
+format = "[took $duration]($style) "
+
+[fill]
+symbol = " "
+
+[time]
+disabled = false
+time_format = "%R"
+style = "#7c6f64"
+format = "[$time]($style)"
+
+[character]
+success_symbol = "[❯](#b8bb26)"
+error_symbol = "[❯](#fb4934)"
+vimcmd_symbol = "[❮](#b8bb26)"
