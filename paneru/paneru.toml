@@ -96,3 +96,9 @@ floating = true
 bundle_id = "com.mitchellh.ghostty"
 title = "^keys$"
 floating = true
+
+[windows.anki]
+bundle_id = "net.kovidgoyal.kitty"
+title = "^anki$"
+floating = true
+grid = "20:20:3:3:14:14"

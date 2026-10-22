@@ -1,0 +1,70 @@
+#!/bin/bash
+# anki - review anki cards in the terminal (clanki)
+#
+#   anki          -> sync, review, sync again
+#   anki nosync   -> just review, no syncing
+#
+# clanki works on the same database as Anki Desktop and can't run while
+# it's open, so if Anki is running it gets closed first
+
+export PATH="$HOME/.local/bin:/opt/homebrew/bin:$PATH"
+
+# clanki through clanki/tweaks.py (see the top of that file), plain clanki if it's not there
+PY="$HOME/.local/share/uv/tools/clanki/bin/python"
+TWEAKS="$HOME/.dotfiles/clanki/tweaks.py"
+run_clanki() {
+  if [ -x "$PY" ] && [ -f "$TWEAKS" ]; then
+    "$PY" "$TWEAKS" "$@"
+  else
+    clanki "$@"
+  fi
+}
+
+# clanki is a textual app, by default it paints its own solid background
+# ansi-dark has no background of its own (terminal transparency shows through)
+# and takes colors from the terminal palette, so it follows the hswi preset
+export TEXTUAL_THEME=ansi-dark
+
+# anki's backend prints a whole stack trace every time a call takes >200ms
+# ("blocked main thread for ...ms:"), syncing over the network always does,
+# it's only a debug warning so those blocks get cut out
+anki_sync() {
+  echo "syncing..."
+  PYTHONUNBUFFERED=1 run_clanki sync 2>&1 | awk '
+    /^blocked main thread for/ { skip = 1; next }
+    skip && /^$/ { skip = 0; next }
+    !skip'
+  return ${PIPESTATUS[0]}
+}
+
+if ! command -v clanki > /dev/null; then
+  echo "clanki is not installed, run: uv tool install clanki"
+  read -n 1 -s -r -p "press any key"
+  exit 1
+fi
+
+if [ "$(osascript -e 'application "Anki" is running' 2>/dev/null)" = "true" ]; then
+  echo "closing Anki Desktop..."
+  osascript -e 'quit app "Anki"'
+  # wait max ~10s for it to actually close
+  for i in $(seq 1 20); do
+    [ "$(osascript -e 'application "Anki" is running' 2>/dev/null)" = "true" ] || break
+    sleep 0.5
+  done
+fi
+
+if [ "$1" != "nosync" ]; then
+  anki_sync || echo "sync failed, reviewing offline"
+fi
+
+run_clanki
+
+# in tmux kitty's answer to clanki's image check comes after clanki quits
+# and shows up as ^[_Gi=...;OK^[\ , so swallow whatever is left in the input
+stty -echo 2>/dev/null
+while read -r -s -t 0.2 -n 1000 _; do :; done
+stty echo 2>/dev/null
+
+if [ "$1" != "nosync" ]; then
+  anki_sync || { echo "sync failed, run 'clanki sync' later"; sleep 2; }
+fi

@@ -17,6 +17,9 @@ lalt + shift - k : ~/.dotfiles/scripts/toggle-keys.sh
 # Toggle control center (wifi, bluetooth, audio, focus...)
 lalt + shift - c : ~/.dotfiles/scripts/toggle-ctl.sh
 
+# Toggle anki review (clanki, syncs before and after)
+lalt + shift - a : ~/.dotfiles/scripts/toggle-anki.sh
+
 # Volume
 
 # Volume keys without the macOS popup - the notch island in sketchybar shows the change

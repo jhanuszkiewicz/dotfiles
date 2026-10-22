@@ -18,4 +18,10 @@ ln -sf $DOT/zsh/.zshrc ~/.zshrc
 # launchd doesn't like symlinked plists, so copy them
 mkdir -p ~/Library/LaunchAgents
 cp $DOT/launchd/*.plist ~/Library/LaunchAgents/
+# terminal tools that aren't configs
+# clanki - anki reviews in the terminal (scripts/anki, alt+shift+a)
+export PATH="$HOME/.local/bin:/opt/homebrew/bin:$PATH"
+command -v uv > /dev/null || brew install uv
+command -v clanki > /dev/null || uv tool install clanki
+
 echo "gotowe"
