@@ -4,7 +4,8 @@
 
 sketchybar/
 borders/bordersrc
-ghostty/
+# terminal config (kitty, see term/app)
+kitty/
 starship/starship.toml
 
 # window gaps are part of the look too, but this file also has your keybinds
@@ -19,8 +20,6 @@ tmux/theme.conf
 
 # which terminal app the shortcuts open
 term/app
-# terminal cell size in points (width height) - popups use it to center themselves
-term/cell
 
 # btop colors (btop.conf points at this file, restart btop after switching)
 btop/themes/preset.theme
@@ -33,3 +32,12 @@ nvim/theme.lua
 
 # bat theme (also used by fzf previews)
 bat/config
+
+# workspace switcher colors (alt+w, see workspacepeek/build.sh)
+workspacepeek/config.json
+
+# desktop widgets colors + font (ubersicht reloads it by itself)
+ubersicht/theme.css
+
+# zen colors + font (userChrome/userContent import it, zen needs a restart)
+zen/chrome/colors.css

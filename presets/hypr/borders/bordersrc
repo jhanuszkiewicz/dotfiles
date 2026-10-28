@@ -3,7 +3,7 @@
 # hyprland-style gradient border: mauve -> blue on the focused window,
 # a faint one on the rest
 # no background_color here - it would paint behind the window and kill
-# the ghostty transparency
+# the terminal transparency
 
 options=(
   style=round

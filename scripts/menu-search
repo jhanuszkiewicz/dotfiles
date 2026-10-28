@@ -1,0 +1,48 @@
+#!/bin/bash
+# menu search (alt+m, runs inside the popup): every item from the menu bar of the app
+# you were in, fzf, enter clicks it. the macos menu bar stays hidden under sketchybar,
+# so this is the way to reach it. reading / clicking = menu-search/menu-ax (swift)
+
+export PATH="/opt/homebrew/bin:$PATH"
+# fzf colors from the active preset
+export FZF_DEFAULT_OPTS_FILE="$HOME/.dotfiles/fzf/colors"
+
+AX="$HOME/.dotfiles/menu-search/menu-ax"
+
+IFS=$'\t' read -r pid name < "/tmp/menu_search_target_$USER"
+
+wait_key() {
+  echo
+  echo "press any key"
+  read -r -n 1
+  exit 1
+}
+
+if [ ! -x "$AX" ]; then
+  echo "menu-ax isn't built yet, run:"
+  echo "  swiftc -O ~/.dotfiles/menu-search/menu-ax.swift -o ~/.dotfiles/menu-search/menu-ax"
+  wait_key
+fi
+if [ -z "$pid" ]; then
+  echo "don't know which app was in front"
+  wait_key
+fi
+
+items=$("$AX" list "$pid") || wait_key
+
+pick=$(printf '%s\n' "$items" | fzf --ansi --reverse --prompt="menu > " --header="$name" \
+  --delimiter=$'\t' --with-nth=1)
+[ -z "$pick" ] && exit 0
+
+path=$(printf '%s' "$pick" | cut -f2)
+
+# clicked while the popup is still open - a process left behind after kitty quits
+# loses kitty's accessibility permission and the click silently does nothing.
+# menu-ax brings the app back to the front first, the popup closes right after
+LOG="/tmp/menu_search_$USER.log"
+echo "$(date '+%H:%M:%S') $name ($pid): $path" >> "$LOG"
+if ! "$AX" press "$pid" "$path" 2>> "$LOG"; then
+  # the app is in front of this popup by now, so say it with a notification
+  err=$(tail -1 "$LOG" | tr -d '"\\')
+  osascript -e "display notification \"$err\" with title \"menu search\""
+fi

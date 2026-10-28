@@ -1,46 +1,60 @@
 #!/bin/sh
-# popup TYTUL KOMENDA SZER WYS
-# otwiera male okno ghostty na srodku aktywnego okna (zwykle terminala)
-# SZER i WYS = ile procent aktywnego okna ma zajac popup
+# popup TITLE COMMAND
+# small floating kitty window with COMMAND, it closes together with the command
+# size and position come from paneru: [windows.<title>] with a grid in paneru.toml
+#
+# kitty opens it straight at the spot paneru will move it to (same math as paneru:
+# screen minus menu bar/notch minus [padding], then the grid), otherwise it pops up
+# at kitty's default spot and size first and visibly jumps
 
 title=$1
 cmd=$2
-W=${3:-60}
-H=${4:-60}
 
-# aktywne okno w punktach: x y szer wys skala gora lewo
-set -- $(osascript -l JavaScript ~/.dotfiles/scripts/front-window.js 2>/dev/null)
-# jakby cos sie wywalilo - caly ekran macbooka
-[ $# -ne 7 ] && set -- 0 0 1800 1169 2 0 0
-x=$1; y=$2; w=$3; h=$4; gora=$6; lewo=$7
+TOML="$HOME/.dotfiles/paneru/paneru.toml"
+SCREEN="/tmp/popup_screen_$USER"
 
-pw=$(( w * W / 100 ))
-ph=$(( h * H / 100 ))
-# zeby w waskim oknie nie bylo za ciasno
-[ $pw -lt 500 ] && pw=500
-[ $ph -lt 300 ] && ph=300
+# screen size + menu bar/notch height, asked once and kept for 10 min
+if [ -z "$(find "$SCREEN" -mmin -10 2>/dev/null)" ]; then
+  osascript -l JavaScript -e '
+    ObjC.import("AppKit")
+    var s = $.NSScreen.mainScreen
+    var f = s.frame
+    var v = s.visibleFrame
+    var bar = f.size.height - (v.origin.y + v.size.height)
+    var notch = s.safeAreaInsets.top
+    Math.round(f.size.width) + " " + Math.round(f.size.height) + " " + Math.round(Math.max(bar, notch))
+  ' > "$SCREEN" 2>/dev/null
+fi
 
-# rozmiar jednej kratki (znaku) w punktach dla czcionki z aktywnego presetu
-cell=$(cat ~/.dotfiles/term/cell 2>/dev/null)
-[ -z "$cell" ] && cell="11.45 20.7"
-cw=${cell% *}
-ch=${cell#* }
+geo=$(awk -v want="[windows.$title]" -v screen="$(cat "$SCREEN" 2>/dev/null)" '
+  { gsub(/"/, "") }
+  /^\[/ { sec = $0 }
+  sec == "[padding]" && $2 == "=" { pad[$1] = $3 }
+  sec == want && $1 == "grid" { grid = $3 }
+  END {
+    split(screen, s, " ")
+    split(grid, g, ":")
+    if (s[1] == "" || g[6] == "" || g[1] == 0 || g[2] == 0) exit
+    x0 = pad["left"]
+    y0 = s[3] + pad["top"]
+    w = s[1] - pad["left"] - pad["right"]
+    h = s[2] - s[3] - pad["top"] - pad["bottom"]
+    printf "%d %d %d %d", x0 + w * g[3] / g[1] + 0.5, y0 + h * g[4] / g[2] + 0.5, w * g[5] / g[1] + 0.5, h * g[6] / g[2] + 0.5
+  }' "$TOML")
 
-# ghostty chce rozmiar w kratkach, a nie w punktach
-# 40 i 32 to padding z configu ghostty (20 i 16 z kazdej strony)
-cols=$(awk -v w=$pw -v c=$cw 'BEGIN { printf "%d", (w - 40) / c }')
-lines=$(awk -v h=$ph -v c=$ch 'BEGIN { printf "%d", (h - 32) / c }')
+# own kitty instance, so it quits as soon as the command ends
+# --title has to come first, toggle-* look for "kitty --title=<name>"
+if [ -n "$geo" ]; then
+  set -- $geo
+  exec open -na kitty --args --title="$title" \
+    --position "${1}x${2}" \
+    -o initial_window_width="$3" -o initial_window_height="$4" \
+    -o macos_quit_when_last_window_closed=yes \
+    -o remember_window_size=no \
+    "$cmd"
+fi
 
-# prawdziwy rozmiar okna po zaokragleniu do kratek, od niego liczymy srodek
-aw=$(awk -v n=$cols -v c=$cw 'BEGIN { printf "%d", n * c + 40 }')
-ah=$(awk -v n=$lines -v c=$ch 'BEGIN { printf "%d", n * c + 32 }')
-px=$(( x + (w - aw) / 2 - lewo ))
-py=$(( y + (h - ah) / 2 - gora ))
-
-# kazdy popup to osobna instancja ghostty, ktora konczy sie razem z komenda
-# --title musi byc pierwszy, bo po nim toggle-* szuka procesu
-exec open -na /Applications/Ghostty.app --args --title="$title" \
-  --window-width=$cols --window-height=$lines \
-  --window-position-x=$px --window-position-y=$py \
-  --window-save-state=never \
-  -e "$cmd"
+exec open -na kitty --args --title="$title" \
+  -o macos_quit_when_last_window_closed=yes \
+  -o remember_window_size=no \
+  "$cmd"

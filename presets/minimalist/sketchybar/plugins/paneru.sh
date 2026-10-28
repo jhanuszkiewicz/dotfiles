@@ -7,6 +7,8 @@ source "$CONFIG_DIR/colors.sh"
 
 state=$(paneru query state --json 2>/dev/null)
 [ -z "$state" ] && exit 0
+# position for ctrl+alt+h/l (scripts/desk-nav), saved here so they don't query paneru
+echo "$state" | "$HOME/.dotfiles/scripts/desk-cache" &
 
 args=()
 

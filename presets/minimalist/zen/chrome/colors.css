@@ -1,0 +1,13 @@
+/* zen colors + font for the minimalist preset - hswi swaps this file */
+:root {
+  --dot-bg: #282828;        /* page background, new tab */
+  --dot-bar: #000000;       /* sidebar + toolbars */
+  --dot-hl: #32302f;        /* url bar, active tab */
+  --dot-fg: #d5c4a1;
+  --dot-fg-dim: #c8c8c8;
+  --dot-muted: #7a7a7a;     /* inactive tabs */
+  --dot-accent: #ebdbb2;    /* active tab stripe, urls in the url popup */
+  --dot-border: #7c6f64;
+  --dot-font: "Tamzen8x16", monospace;
+  --dot-font-size: 16px;
+}

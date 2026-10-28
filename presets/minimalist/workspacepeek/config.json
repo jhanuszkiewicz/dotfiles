@@ -1,0 +1,31 @@
+{
+  "windowManager": {
+    "backend": "paneru",
+    "includeEmptyWorkspaces": false
+  },
+  "hotkey": {
+    "triggerKey": "w",
+    "triggerModifiers": [
+      "option"
+    ],
+    "consumeEvent": true
+  },
+  "colors": {
+    "useWalColors": false,
+    "fallback": {
+      "background": "#282828",
+      "foreground": "#d5c4a1",
+      "color0": "#282828",
+      "color1": "#3c3836",
+      "color2": "#504945",
+      "color3": "#3c3836",
+      "color4": "#a89984",
+      "color5": "#a89984",
+      "color6": "#a89984",
+      "color7": "#d5c4a1",
+      "color8": "#3c3836",
+      "color13": "#a89984",
+      "color15": "#d5c4a1"
+    }
+  }
+}

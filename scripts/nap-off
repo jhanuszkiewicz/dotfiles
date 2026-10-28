@@ -1,0 +1,69 @@
+#!/bin/bash
+# nap-off - turns off App Nap for apps, so windows paneru slid off screen
+# don't fall asleep and stutter when they slide back in
+#
+#   nap-off              -> every app that's open right now (the ones with a dock icon)
+#   nap-off Firefox ...  -> only these
+#   nap-off --undo [...] -> back to normal
+#   nap-off --list       -> which apps have it off
+#
+# an app picks it up after a restart (cmd+q and open again)
+
+undo=0
+if [ "$1" = "--undo" ]; then
+  undo=1
+  shift
+fi
+
+if [ "$1" = "--list" ]; then
+  for d in ~/Library/Preferences/*.plist
+  do
+    id=$(basename "$d" .plist)
+    v=$(defaults read "$id" NSAppSleepDisabled 2>/dev/null)
+    [ "$v" = "1" ] && echo "$id"
+  done
+  exit 0
+fi
+
+# bundle ids: from the given names, or of all open apps
+ids=()
+if [ $# -gt 0 ]; then
+  for app in "$@"
+  do
+    id=$(osascript -e "id of app \"$app\"" 2>/dev/null)
+    if [ -z "$id" ]; then
+      echo "can't find app '$app'"
+      continue
+    fi
+    ids+=("$id")
+  done
+else
+  lista=$(osascript -e 'tell application "System Events" to get bundle identifier of every process whose background only is false' 2>/dev/null)
+  IFS=',' read -ra czesci <<< "$lista"
+  for id in "${czesci[@]}"
+  do
+    id=$(echo "$id" | sed 's/^ *//; s/ *$//')
+    if [ -z "$id" ] || [ "$id" = "missing value" ]; then
+      continue
+    fi
+    # finder and system stuff stay as they are
+    case "$id" in
+      com.apple.finder|com.apple.dock|com.apple.systemuiserver) continue ;;
+    esac
+    ids+=("$id")
+  done
+fi
+
+for id in "${ids[@]}"
+do
+  if [ $undo = 1 ]; then
+    defaults delete "$id" NSAppSleepDisabled 2>/dev/null
+    echo "app nap back on:  $id"
+  else
+    defaults write "$id" NSAppSleepDisabled -bool YES
+    echo "app nap off:      $id"
+  fi
+done
+
+echo
+echo "restart these apps (cmd+q and open again) so they pick it up"

@@ -1,8 +1,9 @@
 # outer gaps for paneru, hswi puts these into [padding] in paneru.toml
-top = 9
-bottom = 28
-left = 17
-right = 17
-between = 12
+# hypr preset: bigger gaps so the wallpaper (and the blur) actually shows
+top = 12
+bottom = 20
+left = 22
+right = 22
+between = 16
 # window width = (1512 - left - right) / 1512 on the macbook screen
-width = 0.9775
+width = 0.9709

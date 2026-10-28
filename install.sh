@@ -3,7 +3,7 @@
 
 DOT=~/.dotfiles
 
-for p in paneru sketchybar borders ghostty btop bat nvim tmux skhd karabiner git
+for p in paneru sketchybar borders kitty btop bat nvim tmux skhd karabiner git
 do
   if [ -e ~/.config/$p ] && [ ! -L ~/.config/$p ]; then
     echo "pomijam $p - w ~/.config jest prawdziwy folder, przenies go recznie"
@@ -23,5 +23,8 @@ cp $DOT/launchd/*.plist ~/Library/LaunchAgents/
 export PATH="$HOME/.local/bin:/opt/homebrew/bin:$PATH"
 command -v uv > /dev/null || brew install uv
 command -v clanki > /dev/null || uv tool install clanki
+
+# menu-ax (menu search alt+m + app menus in sketchybar) is built from source, not committed
+xcrun swiftc -O $DOT/menu-search/menu-ax.swift -o $DOT/menu-search/menu-ax
 
 echo "gotowe"

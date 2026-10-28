@@ -1,0 +1,13 @@
+/* zen colors + font for the hypr preset - hswi swaps this file */
+:root {
+  --dot-bg: #1e1e2e;        /* page background, new tab */
+  --dot-bar: #181825;       /* sidebar + toolbars */
+  --dot-hl: #313244;        /* url bar, active tab */
+  --dot-fg: #cdd6f4;
+  --dot-fg-dim: #bac2de;
+  --dot-muted: #7f849c;     /* inactive tabs */
+  --dot-accent: #cba6f7;    /* active tab stripe, urls in the url popup */
+  --dot-border: #45475a;
+  --dot-font: "Departure Mono", monospace;
+  --dot-font-size: 11px; /* Departure Mono is sharp only at 11 or 16.5 px */
+}

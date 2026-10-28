@@ -3,7 +3,7 @@
 -- rounded corners on floating windows, like the rest of this preset
 vim.o.winborder = "rounded"
 
--- transparent background, so the ghostty blur shows through nvim too
+-- transparent background, so the kitty blur shows through nvim too
 require("catppuccin").setup({
   flavour = "mocha",
   transparent_background = true,

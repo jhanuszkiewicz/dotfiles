@@ -1,5 +1,5 @@
 -- nvim colors - minimalist preset (hswi swaps this file, see presets/files.txt)
--- gruvbox dark, same #282828 background as ghostty
+-- gruvbox dark, same #282828 background as the terminal
 
 -- square corners like the rest of this preset
 vim.o.winborder = "single"

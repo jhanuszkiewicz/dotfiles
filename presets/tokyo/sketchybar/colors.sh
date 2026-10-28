@@ -1,6 +1,6 @@
 #!/bin/bash
 # tokyo night (storm), shared by sketchybarrc and plugins
-# BG = ghostty background, so the bar segments look like the terminal
+# BG = terminal background, so the bar segments look like the terminal
 # BLUE is the only accent (active workspace, focused window)
 
 CZARNY=0xff000000

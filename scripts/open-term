@@ -1,7 +1,42 @@
 #!/bin/sh
 # opens a new terminal window - which app depends on the active preset (~/.dotfiles/term/app)
+#
+# new window inside the terminal that's already running (cmd+n), not a new instance.
+# with "open -na" every window was a separate app, so switching between two terminals
+# meant macos handing focus from one app to another - slow, made paneru blink.
+#
+# popups (launcher, keys, ctl...) are their own kitty instances, so the main instance
+# is found through system events: a kitty process with no popup window
+# (pgrep wasn't reliable - kitty also runs helper processes called "kitty")
 
 app=$(cat "$HOME/.dotfiles/term/app" 2>/dev/null)
-[ -z "$app" ] && app=Ghostty
+[ -z "$app" ] && app=kitty
 
-open -na "$app"
+wynik=$(osascript -l JavaScript - "$app" <<'JS'
+function run(argv) {
+  var se = Application('System Events')
+  var id = Application(argv[0]).id()
+  var procs = se.processes.whose({ bundleIdentifier: id })()
+  var popupy = /^(launcher|keys|ctl|btop|windows)$/
+  for (var i = 0; i < procs.length; i++) {
+    var nazwy = procs[i].windows.name()
+    var popup = false
+    for (var j = 0; j < nazwy.length; j++) {
+      if (popupy.test(nazwy[j])) popup = true
+    }
+    if (!popup) {
+      procs[i].frontmost = true
+      delay(0.1)
+      se.keystroke('n', { using: 'command down' })
+      return 'ok'
+    }
+  }
+  return 'none'
+}
+JS
+)
+
+if [ "$wynik" != "ok" ]; then
+  # no main instance yet. -n: with a popup open, plain "open -a" would just bring the popup up
+  open -na "$app"
+fi

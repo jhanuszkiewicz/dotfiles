@@ -18,7 +18,7 @@ do
   $PANERU subscribe --json 2>/dev/null | while read -r line
   do
     case "$line" in
-      *virtual_workspace_changed*|*windows_changed*|*window_focused*)
+      *virtual_workspace_changed*|*windows_changed*|*window_focused*|*display_changed*)
         if [ -n "$timer" ]; then
           kill "$timer" 2>/dev/null
         fi

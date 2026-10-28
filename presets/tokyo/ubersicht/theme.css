@@ -1,0 +1,26 @@
+/* ubersicht colors for the tokyo preset (hswi swaps this file) */
+:root {
+  --font: "CaskaydiaCove Nerd Font";
+  --fs: 20px;
+  --fs-big: 120px;
+  --fg: #a9b1d6;
+  --dim: #9699a8;
+  --accent: #7aa2f7;
+  --host: #ff9e64;
+  --c0: #32344a;
+  --c1: #f7768e;
+  --c2: #9ece6a;
+  --c3: #e0af68;
+  --c4: #7aa2f7;
+  --c5: #ad8ee6;
+  --c6: #449dab;
+  --c7: #9699a8;
+  --c8: #444b6a;
+  --c9: #ff7a93;
+  --c10: #b9f27c;
+  --c11: #ff9e64;
+  --c12: #7da6ff;
+  --c13: #bb9af7;
+  --c14: #0db9d7;
+  --c15: #acb0d0;
+}

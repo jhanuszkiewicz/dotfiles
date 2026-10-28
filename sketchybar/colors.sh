@@ -1,19 +1,27 @@
 #!/bin/bash
-# tokyo night (storm), shared by sketchybarrc and plugins
-# BG = ghostty background, so the bar segments look like the terminal
-# BLUE is the only accent (active workspace, focused window)
+# catppuccin mocha, shared by sketchybarrc and plugins
+# BG = terminal background but see-through, so the segments float like waybar modules
+# BLUE is the accent name the plugins use - in this preset it's mauve
+# (same as the border gradient start and the kitty cursor)
 
 CZARNY=0xff000000
-BG=0xff24283b
-BG2=0xff2e3c64
-RAMKA=0xff3b4261
-FG=0xffc0caf5
-FG2=0xffa9b1d6
-GREY=0xff737aa2
-BLUE=0xff7aa2f7
-CYAN=0xff7dcfff
-PURPLE=0xffbb9af7
-GREEN=0xff9ece6a
-YELLOW=0xffe0af68
-ORANGE=0xffff9e64
-RED=0xfff7768e
+BG=0xd91e1e2e
+BG2=0xff313244
+RAMKA=0xff45475a
+FG=0xffcdd6f4
+FG2=0xffbac2de
+GREY=0xff7f849c
+BLUE=0xffcba6f7
+CYAN=0xff89dceb
+PURPLE=0xffb4befe
+GREEN=0xffa6e3a1
+YELLOW=0xfff9e2af
+ORANGE=0xfffab387
+RED=0xfff38ba8
+# segment outline - mauve, half transparent
+OBRYS=0x99cba6f7
+# full-height lines between the groups of the solid bar
+LINIA=0xff313244
+# bar background / dropdown background, and dropdown border
+CRUST=0xff11111b
+SURFACE2=0xff585b70

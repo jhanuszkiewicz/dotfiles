@@ -1,6 +1,6 @@
 #!/bin/bash
 # tokyo-gruv - gruvbox dark, shared by sketchybarrc and plugins
-# BG = ghostty background, so the bar segments look like the terminal
+# BG = terminal background, so the bar segments look like the terminal
 # BLUE is the only accent (active workspace, focused window) - walnut brown 0xff8f5e3b
 # (was gruvbox aqua 0xff83a598, too cold on the warm wallpaper)
 

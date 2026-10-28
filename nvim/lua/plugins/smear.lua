@@ -1,7 +1,7 @@
 -- smear cursor: the cursor leaves a short trail when it jumps (gg, G, ctrl+d, switching splits...)
 return {
   "sphamba/smear-cursor.nvim",
-  -- off: ghostty draws the trail now (ghostty/shaders/cursor_warp.glsl), smoother and also between tmux panes
+  -- off: kitty draws the trail now (cursor_trail in kitty.conf), smoother and also between tmux panes
   enabled = false,
   event = "VeryLazy",
   opts = {

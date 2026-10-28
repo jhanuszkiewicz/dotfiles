@@ -1,0 +1,13 @@
+/* zen colors + font for the tokyo preset - hswi swaps this file */
+:root {
+  --dot-bg: #24283b;        /* page background, new tab */
+  --dot-bar: #1f2335;       /* sidebar + toolbars */
+  --dot-hl: #292e42;        /* url bar, active tab */
+  --dot-fg: #c0caf5;
+  --dot-fg-dim: #a9b1d6;
+  --dot-muted: #565f89;     /* inactive tabs */
+  --dot-accent: #7aa2f7;    /* active tab stripe, urls in the url popup */
+  --dot-border: #414868;
+  --dot-font: "CaskaydiaCove Nerd Font", monospace;
+  --dot-font-size: 12px;
+}

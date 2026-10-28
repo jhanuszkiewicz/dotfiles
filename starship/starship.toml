@@ -1,6 +1,6 @@
 "$schema" = 'https://starship.rs/config-schema.json'
 
-# tokyo prompt - lean, no backgrounds:
+# hypr prompt (catppuccin mocha) - lean, no backgrounds:
 #   ~/.dotfiles on  main !1                      14:32
 #   ❯
 
@@ -15,26 +15,26 @@ $line_break\
 $character"""
 
 [directory]
-style = "bold #7aa2f7"
+style = "bold #cba6f7"
 read_only = " ro"
-read_only_style = "#f7768e"
+read_only_style = "#f38ba8"
 format = "[$path]($style)[$read_only]($read_only_style) "
 truncation_length = 3
 truncation_symbol = "…/"
 
 [git_branch]
 symbol = " "
-style = "#a9b1d6"
-format = "[on](#565f89) [$symbol$branch]($style) "
+style = "#89b4fa"
+format = "[on](#6c7086) [$symbol$branch]($style) "
 
 [git_status]
-style = "#e0af68"
+style = "#f9e2af"
 format = "[($all_status$ahead_behind )]($style)"
 
 # only shows up when a command took longer than 2s
 [cmd_duration]
 min_time = 2000
-style = "#e0af68"
+style = "#f9e2af"
 format = "[took $duration]($style) "
 
 [fill]
@@ -43,10 +43,10 @@ symbol = " "
 [time]
 disabled = false
 time_format = "%R"
-style = "#565f89"
+style = "#6c7086"
 format = "[$time]($style)"
 
 [character]
-success_symbol = "[❯](#9ece6a)"
-error_symbol = "[❯](#f7768e)"
-vimcmd_symbol = "[❮](#9ece6a)"
+success_symbol = "[❯](#a6e3a1)"
+error_symbol = "[❯](#f38ba8)"
+vimcmd_symbol = "[❮](#a6e3a1)"

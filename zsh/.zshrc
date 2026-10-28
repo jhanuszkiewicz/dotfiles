@@ -21,9 +21,11 @@ eval "$(zoxide init zsh)"
 source <(fzf --zsh)
 
 alias ls="eza --icons=auto"
-alias ll="eza -la --icons=auto --git"
+alias ll="clear && eza -la --icons=auto --git"
 alias lt="eza --tree --level=2 --icons=auto"
 
 export PATH="$HOME/.dotfiles/scripts:$PATH"
 
 export FZF_DEFAULT_OPTS_FILE="$HOME/.dotfiles/fzf/colors"
+
+source ~/.dotfiles/zsh/island.zsh

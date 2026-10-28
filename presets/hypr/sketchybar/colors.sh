@@ -1,8 +1,8 @@
 #!/bin/bash
 # catppuccin mocha, shared by sketchybarrc and plugins
-# BG = ghostty background but see-through, so the segments float like waybar modules
+# BG = terminal background but see-through, so the segments float like waybar modules
 # BLUE is the accent name the plugins use - in this preset it's mauve
-# (same as the border gradient start and the ghostty cursor)
+# (same as the border gradient start and the kitty cursor)
 
 CZARNY=0xff000000
 BG=0xd91e1e2e
@@ -20,3 +20,8 @@ ORANGE=0xfffab387
 RED=0xfff38ba8
 # segment outline - mauve, half transparent
 OBRYS=0x99cba6f7
+# full-height lines between the groups of the solid bar
+LINIA=0xff313244
+# bar background / dropdown background, and dropdown border
+CRUST=0xff11111b
+SURFACE2=0xff585b70

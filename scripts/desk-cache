@@ -1,0 +1,30 @@
+#!/bin/bash
+# paneru state (json) on stdin -> "<workspace> <index of the focused window> <window count>"
+# in /tmp, for desk-nav. called by the bar's paneru.sh, which already has the state,
+# so ctrl+alt+h/l don't have to ask paneru on every press (that's what made them slow)
+# index is -1 when nothing tiled has focus (popup, other app...)
+#
+# the ubersicht widgets hide when the count is > 0, so when the workspace goes
+# from empty to not empty (or back) ubersicht gets told to refresh right away
+
+export PATH=/opt/homebrew/bin:$PATH
+f=/tmp/paneru_desk_$USER
+
+read -r a b old 2>/dev/null < "$f"
+
+jq -r '
+  .active.native_workspace_id as $n
+  | [.virtual_workspaces[] | select(.active and .native_workspace_id == $n)][0]
+  | [.windows[] | select(.floating | not)] as $w
+  | "\(.number) \([$w | to_entries[] | select(.value.focused == true) | .key][0] // -1) \($w | length)"
+' > "$f.tmp" 2>/dev/null && mv "$f.tmp" "$f"
+
+read -r a b new 2>/dev/null < "$f"
+was_empty=0
+now_empty=0
+[ "${old:-0}" -eq 0 ] && was_empty=1
+[ "${new:-0}" -eq 0 ] && now_empty=1
+if [ "$was_empty" != "$now_empty" ]; then
+  ( osascript -e 'tell application id "tracesOf.Uebersicht" to refresh widget id "theme-jsx"' ||
+      osascript -e 'tell application id "tracesOf.Uebersicht" to refresh' ) >/dev/null 2>&1 &
+fi

@@ -7,6 +7,8 @@ source "$CONFIG_DIR/colors.sh"
 
 stan=$(paneru query state --json 2>/dev/null)
 [ -z "$stan" ] && exit 0
+# position for ctrl+alt+h/l (scripts/desk-nav), saved here so they don't query paneru
+echo "$stan" | "$HOME/.dotfiles/scripts/desk-cache" &
 
 IKONY=0
 if [ -f "$CONFIG_DIR/plugins/icon_map.sh" ]; then
@@ -48,8 +50,8 @@ do
   i=$((i+1))
   [ $i -gt 8 ] && break
 
-  # ghostty shows up as a plain "Terminal" with a >_ icon
-  if [ "$apka" = "Ghostty" ]; then
+  # kitty shows up as a plain "Terminal" with a >_ icon
+  if [ "$apka" = "kitty" ]; then
     apka="Terminal"
   fi
 

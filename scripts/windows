@@ -1,0 +1,27 @@
+#!/bin/bash
+# windows (alt+tab) - every window of every open app in fzf, minimized ones too
+# enter = jump to that window (a minimized one gets restored first)
+# paneru notices the focus change and scrolls the strip to it
+# (the javascript is in windows-list.js / windows-focus.js - macos bash 3.2
+# chokes on js pasted inside $(...))
+export PATH="/opt/homebrew/bin:$PATH"
+export FZF_DEFAULT_OPTS_FILE="$HOME/.dotfiles/fzf/colors"
+DIR="$HOME/.dotfiles/scripts"
+
+# TEMP debug (delete later)
+LOG="$HOME/.dotfiles/.debug/windows.log"
+echo "--- windows script started" >> "$LOG"
+exec 2>> "$LOG"
+
+lista=$(osascript -l JavaScript "$DIR/windows-list.js")
+echo "list lines: $(echo "$lista" | grep -c .)" >> "$LOG"
+[ -z "$lista" ] && exit 0
+
+wybor=$(echo "$lista" | fzf --prompt="window > " --reverse \
+  --delimiter='\t' --with-nth=1,3,4 --tabstop=4)
+[ -z "$wybor" ] && exit 0
+
+apka=$(echo "$wybor" | cut -f1)
+nr=$(echo "$wybor" | cut -f2)
+
+osascript -l JavaScript "$DIR/windows-focus.js" "$apka" "$nr"

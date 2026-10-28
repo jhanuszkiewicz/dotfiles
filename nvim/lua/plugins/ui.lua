@@ -26,7 +26,7 @@ return {
     lazy = false,
     priority = 900, -- right after the colors, other plugins want the icons
     config = function()
-      -- icons (ghostty has nerd font symbols built in, so they work even with Tamzen)
+      -- icons (nerd font symbols, kitty falls back to the nerd font for them even with Tamzen)
       require("mini.icons").setup()
       MiniIcons.mock_nvim_web_devicons() -- plugins asking for nvim-web-devicons get mini.icons
 
@@ -233,7 +233,7 @@ return {
       require("nvim-tree").setup(opts)
 
       -- highlighted bar on the current line in the tree
-      -- the cursor stays visible so the ghostty cursor trail has somewhere to go
+      -- the cursor stays visible so the kitty cursor trail has somewhere to go
       -- (re-applied after a colorscheme reload, e.g. hswi)
       local function tree_cursorline()
         vim.api.nvim_set_hl(0, "NvimTreeCursorLine", { link = "Visual" })

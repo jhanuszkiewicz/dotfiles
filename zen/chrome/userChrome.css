@@ -1,99 +1,96 @@
-/* tokyo night dla zena */
+/* zen look - colors and font come from colors.css (hswi swaps it per preset) */
+@import "colors.css";
 
 :root {
-  --tn-bg: #24283b;
-  --tn-bg-dark: #1f2335;
-  --tn-bg-hl: #292e42;
-  --tn-fg: #c0caf5;
-  --tn-fg-dark: #a9b1d6;
-  --tn-comment: #565f89;
-  --tn-blue: #7aa2f7;
-  --tn-border: #414868;
+  /* zen colors */
+  --zen-colors-primary: var(--dot-hl) !important;
+  --zen-primary-color: var(--dot-accent) !important;
+  --zen-colors-secondary: var(--dot-hl) !important;
+  --zen-colors-tertiary: var(--dot-bar) !important;
+  --zen-colors-border: var(--dot-border) !important;
+  --zen-themed-toolbar-bg: var(--dot-bar) !important;
+  --zen-main-browser-background: var(--dot-bar) !important;
+  --zen-main-browser-background-toolbar: var(--dot-bar) !important;
+  --toolbox-textcolor: var(--dot-fg) !important;
 
-  /* zmien na czcionke z terminala */
-  --tn-font: "JetBrainsMono Nerd Font", "JetBrains Mono", monospace;
+  /* firefox colors zen still uses */
+  --toolbar-bgcolor: var(--dot-bg) !important;
+  --toolbar-color: var(--dot-fg) !important;
+  --toolbox-bgcolor-inactive: var(--dot-bar) !important;
+  --toolbarbutton-icon-fill: var(--dot-fg-dim) !important;
+  --lwt-text-color: var(--dot-fg) !important;
+  --tab-selected-textcolor: var(--dot-fg) !important;
+  --toolbar-field-color: var(--dot-fg) !important;
+  --toolbar-field-focus-color: var(--dot-fg) !important;
+  --arrowpanel-background: var(--dot-bg) !important;
+  --arrowpanel-color: var(--dot-fg) !important;
+  --sidebar-text-color: var(--dot-fg-dim) !important;
+  --lwt-sidebar-text-color: var(--dot-fg-dim) !important;
+  --lwt-sidebar-background-color: var(--dot-bar) !important;
+  --newtab-background-color: var(--dot-bg) !important;
+  --newtab-text-primary-color: var(--dot-fg) !important;
 
-  /* kolory zena */
-  --zen-colors-primary: var(--tn-bg-hl) !important;
-  --zen-primary-color: var(--tn-blue) !important;
-  --zen-colors-secondary: var(--tn-bg-hl) !important;
-  --zen-colors-tertiary: var(--tn-bg-dark) !important;
-  --zen-colors-border: var(--tn-border) !important;
-  --zen-themed-toolbar-bg: var(--tn-bg-dark) !important;
-  --zen-main-browser-background: var(--tn-bg-dark) !important;
-
-  /* kolory firefoxa ktore zen dalej uzywa */
-  --toolbar-bgcolor: var(--tn-bg) !important;
-  --toolbar-color: var(--tn-fg) !important;
-  --toolbox-bgcolor-inactive: var(--tn-bg-dark) !important;
-  --toolbarbutton-icon-fill: var(--tn-fg-dark) !important;
-  --lwt-text-color: var(--tn-fg) !important;
-  --tab-selected-textcolor: var(--tn-fg) !important;
-  --toolbar-field-color: var(--tn-fg) !important;
-  --toolbar-field-focus-color: var(--tn-fg) !important;
-  --arrowpanel-background: var(--tn-bg) !important;
-  --arrowpanel-color: var(--tn-fg) !important;
-  --sidebar-text-color: var(--tn-fg-dark) !important;
-  --lwt-sidebar-text-color: var(--tn-fg-dark) !important;
-  --lwt-sidebar-background-color: var(--tn-bg-dark) !important;
-  --newtab-background-color: var(--tn-bg) !important;
-  --newtab-text-primary-color: var(--tn-fg) !important;
-
-  /* ostre rogi i mniejszy odstep wokol strony */
+  /* square corners, page glued to the window edges */
   --zen-border-radius: 0px !important;
-  --zen-element-separation: 4px !important;
+  --zen-native-inner-radius: 0px !important;
+  --zen-element-separation: 0px !important;
 }
 
-/* czcionka z terminala w calym ui */
+/* zen paints the workspace gradient + grain on its own background element
+   and sets the vars inline there, so the :root override doesn't reach it.
+   that's the purple smudge in the sidebar - cover it with a flat color */
+.zen-browser-generic-background::before,
+.zen-browser-generic-background::after {
+  background: var(--dot-bar) !important;
+  opacity: 1 !important;
+}
+
+.zen-browser-grain {
+  display: none !important;
+}
+
+/* terminal font in the whole ui */
 #navigator-toolbox,
 #zen-sidebar-top-buttons,
 menupopup,
 panel,
 .urlbarView {
-  font-family: var(--tn-font) !important;
+  font-family: var(--dot-font) !important;
+  font-size: var(--dot-font-size) !important;
 }
 
-/* tla paskow */
 #TabsToolbar,
 #titlebar,
 #zen-appcontent-navbar-container {
-  background-color: var(--tn-bg-dark) !important;
+  background-color: var(--dot-bar) !important;
 }
 
 .urlbar-background {
-  background-color: var(--tn-bg) !important;
+  background-color: var(--dot-hl) !important;
   border-radius: 0 !important;
 }
 
 .urlbarView-url {
-  color: var(--tn-blue) !important;
+  color: var(--dot-accent) !important;
 }
 
-/* aktywna karta - niebieska kreska z lewej */
+/* active tab - accent stripe on the left */
 .tabbrowser-tab[selected] .tab-background {
-  box-shadow: inset 2px 0 0 var(--tn-blue) !important;
-  border-radius: 0 !important;
+  background-color: var(--dot-hl) !important;
+  box-shadow: inset 2px 0 0 var(--dot-accent) !important;
 }
 
-/* nieaktywne karty przygaszone */
 .tabbrowser-tab:not([selected]) .tab-label {
-  color: var(--tn-comment) !important;
+  color: var(--dot-muted) !important;
 }
 
 .tab-background {
   border-radius: 0 !important;
 }
 
-/* bez przyciskow macos (zamknij / zminimalizuj / pelny ekran) */
+/* no macos buttons (close / minimize / fullscreen) */
 .titlebar-buttonbox-container {
   display: none !important;
-}
-
-/* strona bez zaokraglen i bez odstepu od krawedzi okna */
-:root {
-  --zen-native-inner-radius: 0px !important;
-  --zen-border-radius: 0px !important;
-  --zen-element-separation: 0px !important;
 }
 
 #tabbrowser-tabpanels,
@@ -103,8 +100,8 @@ browser {
   border-radius: 0 !important;
 }
 
-/* tlo pod strona w kolorze tokyo night zamiast szarego */
+/* behind the page while it loads */
 #tabbrowser-tabpanels,
 browser {
-  background-color: #24283b !important;
+  background-color: var(--dot-bg) !important;
 }

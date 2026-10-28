@@ -4,3 +4,6 @@ karabiner/automatic_backups/
 # local backups and sketchybar debug logs
 .backup/
 .debug/
+
+# built from menu-search/menu-ax.swift (swiftc), not committed
+menu-search/menu-ax

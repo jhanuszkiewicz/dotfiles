@@ -1,5 +1,5 @@
 #!/bin/sh
-# every new terminal window (ghostty) starts in tmux
+# every new terminal window (kitty) starts in tmux
 # first window attaches to session "main" (so nothing is lost when you close it),
 # other windows get their own session so they don't mirror the first one
 

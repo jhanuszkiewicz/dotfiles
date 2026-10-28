@@ -1,15 +1,17 @@
 #!/bin/bash
 # hswi - look preset switcher
 #
-#   hswi          -> fzf menu (saved presets + "add new preset")
-#   hswi name     -> switch straight to preset "name"
-#   hswi --save [name]  -> save current configs into preset "name"
-#                          (no name = the active one)
+#   hswi                     -> fzf menu (saved presets + "add new preset")
+#   hswi theme               -> list presets
+#   hswi theme name          -> switch to preset "name", shows every step
+#   hswi theme name --force  -> switch even with unsaved changes (they get lost)
+#   hswi save [name]         -> save current configs into the active preset
+#                               (or into "name")
 #
 # preset = copy of the files listed in presets/files.txt (+ wallpaper) in presets/<name>/
 
 export PATH="/opt/homebrew/bin:$HOME/.cargo/bin:$PATH"
-# kolory fzf z aktywnego presetu
+# fzf colors from the active preset
 export FZF_DEFAULT_OPTS_FILE="$HOME/.dotfiles/fzf/colors"
 
 DOT="$HOME/.dotfiles"
@@ -19,6 +21,19 @@ ACTIVE_FILE="$PRE/.active"
 ADD="+ add new preset"
 
 mkdir -p "$PRE"
+
+# colors only when it's a real terminal
+if [ -t 1 ]; then
+  GREEN=$'\033[32m'; RED=$'\033[31m'; YELLOW=$'\033[33m'; DIM=$'\033[2m'; BOLD=$'\033[1m'; OFF=$'\033[0m'
+else
+  GREEN=""; RED=""; YELLOW=""; DIM=""; BOLD=""; OFF=""
+fi
+
+errors=0
+
+ok()   { echo "  ${GREEN}✓${OFF} $1"; }
+skip() { echo "  ${DIM}· $1${OFF}"; }
+fail() { echo "  ${RED}✗ $1${OFF}"; errors=$((errors + 1)); }
 
 # ---------- helpers ----------
 
@@ -38,55 +53,113 @@ list_presets() {
   done
 }
 
-# copies files from $1 to $2 (dirs end with / and get synced as a whole)
-copy() {
-  src="$1"
-  dst="$2"
-  paths | while read -r p
-  do
-    if [ ! -e "$src/$p" ]; then
-      continue
-    fi
-    if [[ "$p" == */ ]]; then
-      mkdir -p "$dst/$p"
-      # --checksum: presets often differ only in colors, so the files have the same
-      # size and mtime and plain rsync would skip them as "already up to date"
-      rsync -a --delete --checksum "$src/$p" "$dst/$p"
-    else
-      mkdir -p "$(dirname "$dst/$p")"
-      cp -p "$src/$p" "$dst/$p"
-    fi
-  done
+valid_name() {
+  [[ "$1" =~ ^[A-Za-z0-9_-]+$ ]]
 }
 
-# do the live configs differ from the saved preset
-has_changes() {
+# kitty/ -> kitty, tmux/theme.conf -> tmux
+label() {
+  echo "${1%%/*}"
+}
+
+# copy one path from files.txt (dirs end with / and get synced as a whole)
+copy_one() {
+  src="$1"
+  dst="$2"
+  p="$3"
+  if [[ "$p" == */ ]]; then
+    mkdir -p "$dst/$p"
+    # --checksum: presets often differ only in colors, so the files have the same
+    # size and mtime and plain rsync would skip them as "already up to date"
+    rsync -a --delete --checksum "$src/$p" "$dst/$p"
+  else
+    mkdir -p "$(dirname "$dst/$p")"
+    cp -p "$src/$p" "$dst/$p"
+  fi
+}
+
+# copy everything quietly (used by "add" and the menu)
+copy() {
+  while read -r p
+  do
+    [ -e "$1/$p" ] && copy_one "$1" "$2" "$p"
+  done < <(paths)
+}
+
+# copy everything and print a line per file
+# $3 = word for the ok line ("updated" / "saved")
+copy_verbose() {
+  src="$1"
+  dst="$2"
+  word="$3"
+  while read -r p
+  do
+    name=$(label "$p")
+    if [ ! -e "$src/$p" ]; then
+      skip "$name - not in the preset, left as it is"
+      continue
+    fi
+    if diff -rq "$src/$p" "$dst/$p" >/dev/null 2>&1; then
+      skip "$name - no changes"
+      continue
+    fi
+    if copy_one "$src" "$dst" "$p"; then
+      ok "$name $word"
+    else
+      fail "$name - copy failed"
+    fi
+  done < <(paths)
+}
+
+# which files from the live configs differ from the saved preset
+changed_paths() {
   n="$1"
-  paths | while read -r p
+  while read -r p
   do
     if [ -e "$DOT/$p" ] && ! diff -rq "$DOT/$p" "$PRE/$n/$p" >/dev/null 2>&1; then
-      echo yes
-      break
+      echo "$p"
     fi
-  done
+  done < <(paths)
 }
 
 save_wallpaper() {
   dst="$1"
   wp=$(osascript -e 'tell application "System Events" to get picture of current desktop' 2>/dev/null)
-  # old one gets replaced only if we actually got a new one
-  if [ -f "$wp" ]; then
-    rm -f "$dst"/wallpaper.*
-    cp "$wp" "$dst/wallpaper.${wp##*.}"
+  if [ ! -f "$wp" ]; then
+    skip "wallpaper - couldn't read the current one"
+    return
+  fi
+  # wallpaper already comes from this preset - nothing to do
+  # (without this check the rm below would delete it before copying)
+  case "$wp" in
+    "$dst"/wallpaper.*)
+      skip "wallpaper - no changes"
+      return
+      ;;
+  esac
+  rm -f "$dst"/wallpaper.*
+  if cp "$wp" "$dst/wallpaper.${wp##*.}"; then
+    ok "wallpaper saved"
+  else
+    fail "wallpaper - copy failed"
   fi
 }
 
 set_wallpaper() {
+  wp=""
   for w in "$PRE/$1"/wallpaper.*
   do
-    [ -f "$w" ] || continue
-    osascript -e "tell application \"System Events\" to tell every desktop to set picture to \"$w\"" >/dev/null 2>&1
+    [ -f "$w" ] && wp="$w"
   done
+  if [ -z "$wp" ]; then
+    skip "wallpaper - preset has none"
+    return
+  fi
+  if osascript -e "tell application \"System Events\" to tell every desktop to set picture to \"$wp\"" >/dev/null 2>&1; then
+    ok "wallpaper set"
+  else
+    fail "wallpaper - osascript failed"
+  fi
 }
 
 # fzf preview: description + colors from sketchybar/colors.sh as color blocks
@@ -127,7 +200,10 @@ preview() {
 set_padding() {
   pf="$DOT/paneru/padding"
   toml="$DOT/paneru/paneru.toml"
-  [ -f "$pf" ] && [ -f "$toml" ] || return
+  if [ ! -f "$pf" ] || [ ! -f "$toml" ]; then
+    skip "paneru gaps - no padding file"
+    return
+  fi
   tmp=$(mktemp)
   awk -v pf="$pf" '
     BEGIN {
@@ -147,72 +223,301 @@ set_padding() {
   ' "$toml" > "$tmp"
   # paneru sets window gaps only when a window shows up,
   # so when they changed restart it so already open windows get them too
-  if ! cmp -s "$tmp" "$toml"; then
+  if cmp -s "$tmp" "$toml"; then
+    skip "paneru gaps - no changes"
+  else
     cat "$tmp" > "$toml"
-    paneru restart >/dev/null 2>&1
+    if paneru restart >/dev/null 2>&1; then
+      ok "paneru gaps updated (paneru restarted)"
+    else
+      fail "paneru gaps written, but paneru restart failed"
+    fi
   fi
   rm -f "$tmp"
 }
 
-reload() {
-  # bar
-  sketchybar --reload 2>/dev/null
+# strip of the new wallpaper for the sketchybar background
+bar_wallpaper() {
+  if [ ! -f "$DOT/scripts/bar-wallpaper" ]; then
+    skip "bar wallpaper - no script"
+    return
+  fi
+  wp=""
+  for w in "$PRE/$1"/wallpaper.*
+  do
+    [ -f "$w" ] && wp="$w"
+  done
+  if WP="$wp" NO_RELOAD=1 bash "$DOT/scripts/bar-wallpaper" >/dev/null 2>&1; then
+    ok "bar wallpaper strip updated"
+  else
+    fail "bar wallpaper - script failed"
+  fi
+}
 
-  # borders - full restart, because some options (like order) are only read at start
-  if brew services list 2>/dev/null | grep -q '^borders .*started'; then
-    brew services restart borders >/dev/null 2>&1
-  elif [ -x "$DOT/borders/bordersrc" ]; then
-    pkill -x borders
-    sleep 0.3
-    "$DOT/borders/bordersrc" >/dev/null 2>&1 &
+# wait up to ~3s until process $1 is running / is gone
+wait_up() {
+  for i in $(seq 15)
+  do
+    pgrep -x "$1" >/dev/null && return 0
+    sleep 0.2
+  done
+  return 1
+}
+wait_down() {
+  for i in $(seq 15)
+  do
+    pgrep -x "$1" >/dev/null || return 0
+    sleep 0.2
+  done
+  return 1
+}
+
+# full restart of an app: through brew services if it runs that way, otherwise
+# kill it and start $2 in the background
+# $1 = process name, $2 = command to start it
+restart_app() {
+  name="$1"
+  if echo "$services" | grep -q "^$name .*started"; then
+    if ! brew services restart "$name" >/dev/null 2>&1; then
+      fail "$name - brew services restart failed"
+      return
+    fi
+  else
+    pkill -x "$name"
+    wait_down "$name"
+    nohup $2 >/dev/null 2>&1 &
     disown
   fi
+  if wait_up "$name"; then
+    ok "$name restarted"
+  else
+    fail "$name - didn't start again"
+  fi
+}
 
-  # ghostty: new windows get the new config (each one is a new instance), starship on the next prompt
+# kitty pids of the main instance (popups are separate instances started with --title)
+kitty_pids() {
+  for p in $(pgrep -x kitty)
+  do
+    ps -o args= -p "$p" | grep -q -- '--title=' || echo "$p"
+  done
+}
+
+# kills the main kitty and opens it again with the same tmux sessions, one window each
+restart_kitty_now() {
+  sess="$1"
+  pids="$2"
+  kill $pids 2>/dev/null
+  for i in $(seq 15)
+  do
+    left=""
+    for p in $pids
+    do
+      kill -0 "$p" 2>/dev/null && left="$left $p"
+    done
+    [ -z "$left" ] && break
+    sleep 0.2
+  done
+
+  if [ -s "$sess" ]; then
+    open -na kitty --args --session "$sess"
+  else
+    open -na kitty
+  fi
+  for i in $(seq 25)
+  do
+    [ -n "$(kitty_pids)" ] && break
+    sleep 0.2
+  done
+  # kitty reads the session file at start, after that it can go
+  sleep 1
+  rm -f "$sess"
+  [ -n "$(kitty_pids)" ]
+}
+
+restart_kitty() {
+  pids=$(kitty_pids | tr '\n' ' ')
+  if [ -z "$pids" ]; then
+    skip "kitty - not running"
+    return
+  fi
+
+  # kitty session file: one window per tmux session that's open right now.
+  # extra windows have destroy-unattached on, so their session would die together
+  # with kitty - turn it off for the restart, the new window turns it back on
+  sess=$(mktemp "${TMPDIR:-/tmp}/hswi-kitty.XXXXXX")
+  n=0
+  tm=$(command -v tmux)
+  if [ -n "$tm" ] && tmux info >/dev/null 2>&1; then
+    while read -r s att
+    do
+      [ "$att" = "0" ] && continue
+      line="launch $tm attach -t $s"
+      if [ "$(tmux show-options -t "$s" -v destroy-unattached 2>/dev/null)" = "on" ]; then
+        tmux set-option -t "$s" destroy-unattached off
+        line="$line ; set-option destroy-unattached on"
+      fi
+      [ $n -gt 0 ] && echo "new_os_window" >> "$sess"
+      echo "$line" >> "$sess"
+      n=$((n + 1))
+    done < <(tmux list-sessions -F '#{session_name} #{session_attached}')
+  fi
+
+  if [ -n "$TMUX" ]; then
+    # hswi runs inside tmux, so it survives kitty going away and can check the result
+    if restart_kitty_now "$sess" "$pids"; then
+      ok "kitty restarted ($n tmux window(s) reopened)"
+    else
+      fail "kitty - didn't start again"
+    fi
+  else
+    # not in tmux = this shell dies with kitty, so restart it in the background
+    ok "kitty restarting in a moment (this window closes)"
+    ( trap '' HUP; restart_kitty_now "$sess" "$pids" ) </dev/null >/dev/null 2>&1 &
+    disown
+  fi
+}
+
+# zen reads userChrome and user.js only at start, so here just sync the
+# loading background and page font in user.js with the preset and remind about a restart
+sync_zen() {
+  col="$DOT/zen/chrome/colors.css"
+  js="$DOT/zen/user.js"
+  if [ ! -f "$col" ] || [ ! -f "$js" ]; then
+    skip "zen - not set up"
+    return
+  fi
+  bg=$(grep -- '--dot-bg:' "$col" | grep -oE '#[0-9a-fA-F]{6}' | head -1)
+  if [ -n "$bg" ]; then
+    sed -i '' -E "s/(browser\.display\.background_color(\.dark)?\", \")#[0-9a-fA-F]{6}/\1$bg/" "$js"
+  fi
+  # page font = first font in --dot-font
+  font=$(grep -- '--dot-font:' "$col" | sed -E 's/.*--dot-font: *"([^"]+)".*/\1/' | head -1)
+  if [ -n "$font" ]; then
+    sed -i '' -E "s/(font\.name\.[a-z-]+\.x-(western|unicode)\", \")[^\"]*/\1$font/" "$js"
+  fi
+  if pgrep -x zen >/dev/null; then
+    ok "zen colors updated - restart zen (cmd+q) to see them"
+  else
+    ok "zen colors updated - applied on next start"
+  fi
+}
+
+reload() {
+  services=$(brew services list 2>/dev/null)
+
+  # bar - full restart, so items/plugins are built from scratch with the new colors
+  restart_app sketchybar sketchybar
+
+  # borders - full restart, because some options (like order) are only read at start
+  if [ -x "$DOT/borders/bordersrc" ] || echo "$services" | grep -q '^borders '; then
+    restart_app borders "$DOT/borders/bordersrc"
+  else
+    skip "borders - not set up"
+  fi
+
   # tmux if it's running
   if [ -f "$HOME/.config/tmux/tmux.conf" ] && tmux info >/dev/null 2>&1; then
-    tmux source-file "$HOME/.config/tmux/tmux.conf"
+    if tmux source-file "$HOME/.config/tmux/tmux.conf" 2>/dev/null; then
+      ok "tmux reloaded"
+    else
+      fail "tmux - source-file failed"
+    fi
+  else
+    skip "tmux - not running"
   fi
+
+  # these read their config on their own, nothing to reload
+  skip "starship, fzf, bat - pick it up on the next prompt / run"
+  skip "nvim - reloads when you switch back to it, btop - after restart"
+
+  sync_zen
+
+  # last, because it closes the window you're looking at
+  restart_kitty
+}
+
+# prints the unsaved files and returns 1 if there are any
+check_unsaved() {
+  cur=$(active)
+  [ -n "$cur" ] && [ -d "$PRE/$cur" ] || return 0
+  ch=$(changed_paths "$cur")
+  [ -z "$ch" ] && return 0
+
+  echo "${YELLOW}unsaved changes in '$cur':${OFF}"
+  echo "$ch" | sed 's/^/  /'
+  return 1
 }
 
 switch_to() {
   n="$1"
+  echo "${BOLD}switching to $n...${OFF}"
+  # mark it active before copying - if this gets cut halfway, "hswi save" won't
+  # overwrite the old preset with half of the new one
+  echo "$n" > "$ACTIVE_FILE"
+  echo "files:"
+  copy_verbose "$PRE/$n" "$DOT" "updated"
+  echo "look:"
+  set_wallpaper "$n"
+  set_padding
+  bar_wallpaper "$n"
+  echo "apps:"
+  reload
+
+  if [ "$errors" -eq 0 ]; then
+    echo "${GREEN}theme changed: $n${OFF}"
+  else
+    echo "${RED}theme changed to $n, but $errors step(s) failed (see ✗ above)${OFF}"
+    exit 1
+  fi
+}
+
+# hswi theme [name] [--force]
+theme() {
+  n=""
+  force=0
+  for a in "$@"
+  do
+    case "$a" in
+      -f|--force) force=1 ;;
+      *) n="$a" ;;
+    esac
+  done
+
+  if [ -z "$n" ]; then
+    echo "presets:"
+    for p in $(list_presets)
+    do
+      if [ "$p" = "$(active)" ]; then
+        echo "  ${GREEN}* $p${OFF} (active)"
+      else
+        echo "    $p"
+      fi
+    done
+    echo "usage: hswi theme <name>"
+    return
+  fi
+
   if [ ! -d "$PRE/$n" ]; then
     echo "no preset called '$n'"
+    echo "available: $(list_presets | tr '\n' ' ')"
     exit 1
   fi
 
-  # so manual edits in the configs don't get lost
-  cur=$(active)
-  if [ -n "$cur" ] && [ "$cur" != "$n" ] && [ -d "$PRE/$cur" ] && [ -n "$(has_changes "$cur")" ]; then
-    read -r -p "you have unsaved changes in '$cur'. save them to the preset? [y/N] " ans
-    if [ "$ans" = "y" ] || [ "$ans" = "Y" ]; then
-      copy "$DOT" "$PRE/$cur"
-      echo "saved '$cur'"
-    fi
+  if [ "$force" -eq 0 ] && ! check_unsaved; then
+    echo
+    echo "save them first:      hswi save"
+    echo "or throw them away:   hswi theme $n --force"
+    exit 1
   fi
 
-  copy "$PRE/$n" "$DOT"
-  echo "$n" > "$ACTIVE_FILE"
-  set_wallpaper "$n"
-  set_padding
-  # strip of the new wallpaper for the sketchybar background (reload below picks it up)
-  if [ -f "$DOT/scripts/bar-wallpaper" ]; then
-    wp=""
-    for w in "$PRE/$n"/wallpaper.*
-    do
-      [ -f "$w" ] && wp="$w"
-    done
-    WP="$wp" NO_RELOAD=1 bash "$DOT/scripts/bar-wallpaper" >/dev/null 2>&1
-  fi
-  reload
-  echo "active preset: $n"
+  switch_to "$n"
 }
 
 add() {
   read -r -p "new preset name: " n
   # only letters, digits, - and _ so paths don't break
-  if [[ ! "$n" =~ ^[A-Za-z0-9_-]+$ ]]; then
+  if ! valid_name "$n"; then
     echo "bad name (allowed: letters, digits, - and _)"
     exit 1
   fi
@@ -236,25 +541,35 @@ save() {
     n=$(active)
   fi
   if [ -z "$n" ]; then
-    echo "no active preset, give a name: hswi --save name"
+    echo "no active preset, give a name: hswi save name"
     exit 1
   fi
-  if [[ ! "$n" =~ ^[A-Za-z0-9_-]+$ ]]; then
+  if ! valid_name "$n"; then
     echo "bad name (allowed: letters, digits, - and _)"
     exit 1
   fi
 
   if [ -d "$PRE/$n" ]; then
-    echo "updating preset '$n'"
+    echo "${BOLD}saving current look to '$n'...${OFF}"
   else
-    echo "no preset '$n' yet, creating it"
+    echo "${BOLD}no preset '$n' yet, creating it...${OFF}"
     mkdir -p "$PRE/$n"
   fi
 
-  copy "$DOT" "$PRE/$n"
+  copy_verbose "$DOT" "$PRE/$n" "saved"
   save_wallpaper "$PRE/$n"
   echo "$n" > "$ACTIVE_FILE"
-  echo "saved current look to '$n'"
+
+  if [ "$errors" -eq 0 ]; then
+    echo "${GREEN}saved: $n${OFF}"
+  else
+    echo "${RED}saved to $n, but $errors step(s) failed (see ✗ above)${OFF}"
+    exit 1
+  fi
+}
+
+usage() {
+  sed -n '3,9p' "$0" | sed 's/^# \{0,1\}//'
 }
 
 # ---------- start ----------
@@ -265,18 +580,28 @@ if [ ! -f "$LIST" ]; then
 fi
 
 case "$1" in
+  theme)
+    shift
+    theme "$@"
+    exit 0
+    ;;
+  save|--save)
+    save "$2"
+    exit 0
+    ;;
   --preview)
     preview "$2"
     exit 0
     ;;
-  --save)
-    save "$2"
+  -h|--help|help)
+    usage
     exit 0
     ;;
   "")
     ;;
   *)
-    switch_to "$1"
+    # old way: hswi name = hswi theme name
+    theme "$@"
     exit 0
     ;;
 esac
@@ -290,6 +615,16 @@ choice=$( { list_presets; echo "$ADD"; } | fzf \
 
 if [ "$choice" = "$ADD" ]; then
   add
-else
-  switch_to "$choice"
+  exit 0
 fi
+
+# in the menu you can answer right away instead of typing hswi save
+if ! check_unsaved; then
+  read -r -p "save them to '$(active)' first? [y/N] " ans
+  if [ "$ans" = "y" ] || [ "$ans" = "Y" ]; then
+    save "$(active)"
+    errors=0
+  fi
+  echo
+fi
+switch_to "$choice"

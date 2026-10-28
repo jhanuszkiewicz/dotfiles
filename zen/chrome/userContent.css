@@ -1,17 +1,24 @@
-/* ciemne tlo na nowej karcie i pustych stronach, zeby nie bylo bialego blysku */
-
-@-moz-document url("about:newtab"), url("about:home"), url("about:blank") {
-  body {
-    background-color: #24283b !important;
-    color: #c0caf5 !important;
-  }
-}
+/* dark new tab / empty pages so there's no white flash - colors from colors.css */
+@import "colors.css";
 
 @-moz-document url("about:newtab"), url("about:home"), url("about:blank") {
   :root {
-    --newtab-background-color: #24283b !important;
+    --newtab-background-color: var(--dot-bg) !important;
   }
-  html {
-    background-color: #24283b !important;
+  html,
+  body {
+    background-color: var(--dot-bg) !important;
+    color: var(--dot-fg) !important;
+  }
+}
+
+/* gmail loading screen (the big logo splash) */
+@-moz-document domain("mail.google.com") {
+  #loading {
+    background-color: var(--dot-bg) !important;
+  }
+  #loading,
+  #loading * {
+    color: var(--dot-fg) !important;
   }
 }

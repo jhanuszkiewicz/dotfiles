@@ -66,7 +66,7 @@ ctrl-alt-shift-5 = 'move-node-to-workspace 5'
 ctrl-alt-tab = 'workspace-back-and-forth'
 
 # terminal
-ctrl-alt-enter = 'exec-and-forget open -na Ghostty'
+ctrl-alt-enter = 'exec-and-forget ~/.dotfiles/scripts/open-term'
 
 # tryb serwisowy
 ctrl-alt-shift-semicolon = 'mode service'

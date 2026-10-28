@@ -20,8 +20,8 @@ LOG="$HOME/.dotfiles/.debug/island.log"     # TEMP debug (delete later)
 
 ZAPAS=15     # how far each half goes under the real notch (island_init.sh: NOTCH)
 TOR=96       # slider length
-F_ZWYKLY="JetBrainsMono Nerd Font:Medium:13.0"
-F_GRUBY="JetBrainsMono Nerd Font:Bold:13.0"
+F_ZWYKLY="Departure Mono:Regular:11.0"
+F_GRUBY="Departure Mono:Regular:11.0"
 
 sb() {
   sketchybar "$@" >> "$LOG" 2>&1

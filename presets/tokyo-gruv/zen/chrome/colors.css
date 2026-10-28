@@ -1,0 +1,13 @@
+/* zen colors + font for the tokyo-gruv preset - hswi swaps this file */
+:root {
+  --dot-bg: #2a2522;        /* page background, new tab */
+  --dot-bar: #1f1b19;       /* sidebar + toolbars */
+  --dot-hl: #3c3836;        /* url bar, active tab */
+  --dot-fg: #ebdbb2;
+  --dot-fg-dim: #d5c4a1;
+  --dot-muted: #928374;     /* inactive tabs */
+  --dot-accent: #8f5e3b;    /* active tab stripe, urls in the url popup */
+  --dot-border: #504945;
+  --dot-font: "JetBrainsMono Nerd Font", monospace;
+  --dot-font-size: 12px;
+}

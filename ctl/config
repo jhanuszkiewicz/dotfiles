@@ -4,9 +4,7 @@
 # available: wifi bt audio focus system settings
 SECTIONS="wifi bt audio focus system settings"
 
-# popup size in % of the active window
-POPUP_W=50
-POPUP_H=50
+# popup size and position: grid in [windows.ctl] in paneru/paneru.toml
 
 # wifi interface, empty = find it automatically (usually en0)
 WIFI_DEV=""

@@ -1,5 +1,5 @@
 -- nvim colors - tokyo-gruv preset (hswi swaps this file, see presets/files.txt)
--- gruvbox dark, warm graphite #2a2522 background - same as ghostty
+-- gruvbox dark, warm graphite #2a2522 background - same as the terminal
 
 -- rounded corners on floating windows, like the rest of this preset
 vim.o.winborder = "rounded"
@@ -7,7 +7,7 @@ vim.o.background = "dark"
 
 require("gruvbox").setup({
   contrast = "",
-  -- warm graphite bg instead of gruvbox's #282828 (matches ghostty, tmux, sketchybar)
+  -- warm graphite bg instead of gruvbox's #282828 (matches kitty, tmux, sketchybar)
   palette_overrides = {
     dark0 = "#2a2522",
   },

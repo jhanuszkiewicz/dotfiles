@@ -20,8 +20,8 @@ get_state() {
 # new terminal window with a new tmux session (open-term would attach to the old "main")
 fresh_terminal() {
   app=$(cat "$HOME/.dotfiles/term/app" 2>/dev/null)
-  if [ -z "$app" ] || [ "$app" = "Ghostty" ]; then
-    open -na Ghostty --args --command="$HOME/.dotfiles/scripts/tmux-new"
+  if [ -z "$app" ] || [ "$app" = "kitty" ]; then
+    open -na kitty --args "$HOME/.dotfiles/scripts/tmux-new"
   else
     "$HOME/.dotfiles/scripts/open-term"
   fi

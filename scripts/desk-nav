@@ -1,0 +1,57 @@
+#!/bin/bash
+# ctrl+alt+h / ctrl+alt+l (from skhd) with an empty "desktop" before the first window:
+#   h on the first window -> workspace 9, only the wallpaper + ubersicht widgets there
+#   l on the desktop      -> back to the workspace you came from, on its first window
+# anywhere else it's the normal paneru focus west / east
+# (going to / leaving the desktop also tells ubersicht to show / hide the widgets)
+#
+# doesn't ask paneru for its state (slow while it animates) - reads what desk-cache
+# saved from the bar's last refresh, and moves the position itself on every press.
+# the bar refreshes right after you stop pressing and fixes it if it got off
+
+export PATH=/opt/homebrew/bin:$HOME/.cargo/bin:$PATH
+
+DESK=9
+CACHE=/tmp/paneru_desk_$USER
+BACK=/tmp/paneru_desk_back_$USER
+dir=$1
+
+# no cache yet (bar didn't refresh since boot) - ask paneru this once
+if [ ! -s "$CACHE" ]; then
+  paneru query state --json 2>/dev/null | "$HOME/.dotfiles/scripts/desk-cache"
+fi
+read -r ws idx cnt < "$CACHE"
+ws=${ws:-0}
+idx=${idx:--1}
+cnt=${cnt:-0}
+
+if [ "$dir" = "west" ]; then
+  if [ "$ws" != "$DESK" ] && { [ "$idx" -eq 0 ] || [ "$cnt" -eq 0 ]; }; then
+    echo "$ws" > "$BACK"
+    echo "$DESK -1 0" > "$CACHE"
+    paneru send-cmd window virtualnum "$DESK"
+    ( osascript -e 'tell application id "tracesOf.Uebersicht" to refresh widget id "theme-jsx"' ||
+      osascript -e 'tell application id "tracesOf.Uebersicht" to refresh' ) >/dev/null 2>&1 &
+  else
+    paneru send-cmd window focus west
+    if [ "$idx" -gt 0 ]; then
+      echo "$ws $((idx - 1)) $cnt" > "$CACHE"
+    fi
+  fi
+else
+  if [ "$ws" = "$DESK" ]; then
+    back=$(cat "$BACK" 2>/dev/null)
+    back=${back:-1}
+    # count unknown until the bar refreshes, so don't stop "east" at it
+    echo "$back 0 99" > "$CACHE"
+    paneru send-cmd window virtualnum "$back"
+    paneru send-cmd window focus first
+    ( osascript -e 'tell application id "tracesOf.Uebersicht" to refresh widget id "theme-jsx"' ||
+      osascript -e 'tell application id "tracesOf.Uebersicht" to refresh' ) >/dev/null 2>&1 &
+  else
+    paneru send-cmd window focus east
+    if [ "$idx" -ge 0 ] && [ "$idx" -lt $((cnt - 1)) ]; then
+      echo "$ws $((idx + 1)) $cnt" > "$CACHE"
+    fi
+  fi
+fi

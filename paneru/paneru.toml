@@ -5,32 +5,37 @@ mouse_follows_focus = true
 # Disabled: center windows manually with ctrl + alt - c
 auto_center = false
 # Higher value = shorter animation; remove the line to disable animations
-# (was 20 - slow ease-out tail, the last few px crawl and that reads as stutter)
+# 35 = sweet spot: 20 crawls at the end, 60 does most of the move in 1-2 frames (looks like jumps)
 animation_speed = 35
+# animate switching virtual workspaces too (otherwise the jump to the
+# empty desktop on workspace 9 is instant)
+virtual_workspace_animations = true
 preset_column_widths = [0.33, 0.5, 0.66, 1.0]
 menubar_heigth = 38
 sliver_width = 0
-# off-screen windows have to stick out a bit or macos moves them back,
-# 0.1 = smallest allowed (only the lower part of the window peeks out), 1 px wide
-sliver_height = 0.1
+# off-screen windows have to stick out a bit or macos moves them back.
+# sliver_height < 1 also pushes hidden windows DOWN (0.1 = 45% of the screen),
+# so every window leaving the screen flew down in the animation - off for good.
+# default (1.0) = they only slide sideways, a 1 px full-height edge stays visible
+# sliver_height = 0.1
 
 # Outer gaps; top leaves room for SketchyBar
 # Note: horizontal_padding is also added at the left/right screen edges,
 # and half of the 4 px border hides under the window, so only ~2 px shows.
 # Values below come from paneru/padding of the active hswi preset (minimalist ~16 px, tokyo ~32 px).
 [padding]
-top = 9
-bottom = 28
-left = 17
-right = 17
+top = 12
+bottom = 20
+left = 22
+right = 22
 
 # Gaps between windows
 [windows.wszystkie]
 title = ".*"
-horizontal_padding = 12
+horizontal_padding = 16
 # every window starts exactly as wide as the space between the side gaps
 # (ratio of the whole screen, so it depends on left/right - hswi sets it from paneru/padding)
-width = 0.9775
+width = 0.9709
 
 # Workspace indicators
 [decorations]
@@ -45,8 +50,10 @@ opacity_night = 0
 
 [bindings]
 # Focus: left/right along the strip, up/down within a stack
-window_focus_west = "ctrl + alt - h"                 # Focus window on the left
-window_focus_east = "ctrl + alt - l"                 # Focus window on the right
+# ctrl+alt+h/l are in skhd now (scripts/desk-nav): same focus left/right, plus
+# an empty desktop (workspace 9) before the first window
+# window_focus_west = "ctrl + alt - h"               # Focus window on the left
+# window_focus_east = "ctrl + alt - l"               # Focus window on the right
 window_focus_north = "ctrl + alt - k"                # Focus window above in the stack
 window_focus_south = "ctrl + alt - j"                # Focus window below in the stack
 window_focus_first = "ctrl + alt - a"                # Focus first window on the strip
@@ -86,19 +93,46 @@ window_virtualmovenum_5 = "ctrl + alt + shift - 5"   # Move window to workspace 
 # Session
 quit = "ctrl + alt - q"                              # Quit Paneru
 
-# Floating popups: app launcher and shortcut search
+# Floating popups (scripts/popup): own kitty instance with a fixed title
+# grid = "cols:rows:x:y:w:h" - the screen split into cols x rows, popup at x,y spanning w x h
 [windows.launcher]
-bundle_id = "com.mitchellh.ghostty"
+bundle_id = "net.kovidgoyal.kitty"
 title = "^launcher$"
 floating = true
+grid = "4:4:1:1:2:2"
 
 [windows.keys]
-bundle_id = "com.mitchellh.ghostty"
+bundle_id = "net.kovidgoyal.kitty"
 title = "^keys$"
 floating = true
+grid = "10:8:1:1:8:6"
+
+[windows.ctl]
+bundle_id = "net.kovidgoyal.kitty"
+title = "^ctl$"
+floating = true
+grid = "4:4:1:1:2:2"
 
 [windows.anki]
 bundle_id = "net.kovidgoyal.kitty"
 title = "^anki$"
 floating = true
 grid = "20:20:3:3:14:14"
+
+[windows.btop]
+bundle_id = "net.kovidgoyal.kitty"
+title = "^btop$"
+floating = true
+grid = "20:20:3:3:14:14"
+
+[windows.menu]
+bundle_id = "net.kovidgoyal.kitty"
+title = "^menu$"
+floating = true
+grid = "4:4:1:1:2:2"
+
+[windows.windows]
+bundle_id = "net.kovidgoyal.kitty"
+title = "^windows$"
+floating = true
+grid = "10:8:2:1:6:6"

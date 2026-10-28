@@ -62,7 +62,8 @@ run_clanki
 # in tmux kitty's answer to clanki's image check comes after clanki quits
 # and shows up as ^[_Gi=...;OK^[\ , so swallow whatever is left in the input
 stty -echo 2>/dev/null
-while read -r -s -t 0.2 -n 1000 _; do :; done
+# macos bash 3.2 takes only whole seconds for -t (0.2 was an error)
+while read -r -s -t 1 -n 1000 _; do :; done
 stty echo 2>/dev/null
 
 if [ "$1" != "nosync" ]; then

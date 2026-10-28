@@ -1,1 +1,1 @@
-Hyprland-style rice - Catppuccin Mocha, translucent blurred Ghostty, mauve->blue gradient borders, big gaps, floating bordered bar segments
+Hyprland-style rice - Catppuccin Mocha, translucent blurred kitty, mauve->blue gradient borders, big gaps, solid black waybar-style bar with app menus
