@@ -220,6 +220,54 @@ sketchybar --add graph cpu right 40 \
     label="0%" label.color=$FG2 padding_left=14 padding_right=14 \
     click_script="$PLUGIN_DIR/cpu_click.sh"
 
+sep sep.r5 right
+
+# claude: icon + two stacked bars like the volume slider + 5 h reset time
+#   top, thicker = 5 h window, bottom, thinner = 7 days (claude.sh colors them)
+# hover = popup with the exact % and time left, click = fetch now
+# cache written by scripts/claude-usage (launchd every 5 min, fires claude_usage when done),
+# update_freq only re-reads it so the reset time disappears right after the reset
+# the 5 h slider has padding_right=-36 so it sits on top of the 7 d one, then y_offset splits them
+sketchybar --add event claude_usage
+sketchybar --add item claude.time right \
+  --set claude.time icon.drawing=off label="--" label.color=$GREY padding_right=14 padding_left=8 \
+  --add slider claude.7d right 36 \
+  --set claude.7d icon.drawing=off label.drawing=off y_offset=-3 \
+    slider.highlight_color=$GREY slider.knob.drawing=off \
+    slider.background.height=2 slider.background.corner_radius=1 \
+    slider.background.color=$RAMKA \
+  --add slider claude.5h right 36 \
+  --set claude.5h icon.drawing=off label.drawing=off y_offset=3 padding_right=-36 \
+    slider.highlight_color=$FG2 slider.knob.drawing=off \
+    slider.background.height=3 slider.background.corner_radius=2 \
+    slider.background.color=$RAMKA \
+  --add item claude right \
+  --set claude update_freq=60 padding_left=14 padding_right=8 \
+    icon=":claude:" icon.font="sketchybar-app-font:Regular:14.0" icon.padding_right=0 \
+    icon.color=$GREY label.drawing=off \
+    popup.align=right popup.height=24 \
+    popup.background.color=$CRUST popup.blur_radius=0 \
+    popup.background.border_color=$SURFACE2 popup.background.border_width=1 \
+    popup.background.corner_radius=0 \
+    script="$PLUGIN_DIR/claude.sh" \
+    click_script="$HOME/.dotfiles/scripts/claude-usage" \
+  --subscribe claude claude_usage system_woke mouse.entered mouse.exited mouse.exited.global
+
+for p in 5h 7d
+do
+  sketchybar --add item claude.p$p popup.claude \
+    --set claude.p$p icon.drawing=off label.padding_left=12 label.padding_right=12 \
+      label.color=$FG2
+done
+
+# hovering the bars or the time counts too, same script decides by $SENDER
+for i in claude.5h claude.7d claude.time
+do
+  sketchybar --set $i script="$PLUGIN_DIR/claude.sh" \
+    click_script="$HOME/.dotfiles/scripts/claude-usage" \
+    --subscribe $i mouse.entered mouse.exited
+done
+
 # dynamic island around the notch (black, so it melts into the black bar)
 source "$CONFIG_DIR/island_init.sh"
 
