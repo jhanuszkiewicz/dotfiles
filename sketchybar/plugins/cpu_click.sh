@@ -1,5 +1,6 @@
 #!/bin/bash
-# click on cpu: the icon turns into a graph for 8 s, a second click goes back right away
+# click on cpu: popup with the top processes by cpu, a second click switches it
+# to ram, a third closes it (cpu.sh keeps the list fresh while it's open)
 # right click = btop (if the preset has it)
 
 export PATH=/opt/homebrew/bin:$PATH
@@ -11,20 +12,16 @@ fi
 
 plik="/tmp/sketchybar_cpu_$USER"
 
-# graph already shown - hide it right away
-if [ "$(sketchybar --query cpu | jq -r '.geometry.drawing')" = "on" ]; then
-  echo nic > "$plik"
-  sketchybar --set cpu drawing=off --set cpu_icon drawing=on
+if [ "$(sketchybar --query cpu_icon | jq -r '.popup.drawing')" != "on" ]; then
+  tryb=cpu
+elif [ "$(cat "$plik" 2>/dev/null)" = "cpu" ]; then
+  tryb=ram
+else
+  echo off > "$plik"
+  sketchybar --set cpu_icon popup.drawing=off
   exit 0
 fi
 
-sketchybar --set cpu_icon drawing=off --set cpu drawing=on
-
-# icon back after 8 s (unless there was another click meanwhile)
-echo $$ > "$plik"
-(
-  sleep 8
-  if [ "$(cat "$plik")" = "$$" ]; then
-    sketchybar --set cpu drawing=off --set cpu_icon drawing=on
-  fi
-) &
+echo $tryb > "$plik"
+"$CONFIG_DIR/plugins/cpu_top.sh" $tryb
+sketchybar --set cpu_icon popup.drawing=on

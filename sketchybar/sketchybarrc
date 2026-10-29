@@ -206,19 +206,35 @@ sketchybar --add item wifi right \
 
 sep sep.r4 right
 
-# cpu: icon + %, click = for 8 s the icon turns into a graph (cpu_click.sh)
-# the graph keeps collecting points while hidden, so it has history when shown
-sketchybar --add graph cpu right 40 \
-  --set cpu drawing=off updates=on update_freq=2 padding_left=14 padding_right=14 \
-    icon.drawing=off label.drawing=off \
-    graph.color=$GREY graph.fill_color=0x33${GREY:4} graph.line_width=1.5 \
-    background.drawing=on background.color=0x00000000 background.height=16 \
-    click_script="$PLUGIN_DIR/cpu_click.sh" \
-    script="$PLUGIN_DIR/cpu.sh" \
+# cpu: icon + % on top, used ram (GB) below
+# click = popup with the top 5 processes by cpu, 2nd click = by ram, 3rd = close
+# (cpu_click.sh), mouse leaving closes it too, cpu.sh refreshes it every 2 s
+# ram goes first (rightmost), cpu_icon has padding_right=-36 so its label sits right above it
+sketchybar --add item ram right \
+  --set ram icon.drawing=off label="0G" label.color=$GREY \
+    label.width=36 label.align=left label.y_offset=-6 padding_left=0 padding_right=14 \
+    script="$PLUGIN_DIR/cpu.sh" click_script="$PLUGIN_DIR/cpu_click.sh" \
+  --subscribe ram mouse.exited.global \
   --add item cpu_icon right \
-  --set cpu_icon icon= icon.color=$GREY \
-    label="0%" label.color=$FG2 padding_left=14 padding_right=14 \
-    click_script="$PLUGIN_DIR/cpu_click.sh"
+  --set cpu_icon icon=󰘚 icon.color=$GREY update_freq=2 \
+    label="0%" label.color=$FG2 label.width=36 label.align=left label.y_offset=6 \
+    padding_left=14 padding_right=-36 \
+    popup.align=right popup.height=24 \
+    popup.background.color=$CRUST popup.blur_radius=0 \
+    popup.background.border_color=$SURFACE2 popup.background.border_width=1 \
+    popup.background.corner_radius=0 \
+    script="$PLUGIN_DIR/cpu.sh" click_script="$PLUGIN_DIR/cpu_click.sh" \
+  --subscribe cpu_icon mouse.exited.global \
+  --add item cpu.top popup.cpu_icon \
+  --set cpu.top icon.drawing=off label.padding_left=12 label.padding_right=12 \
+    label.color=$GREY
+
+for i in 1 2 3 4 5
+do
+  sketchybar --add item cpu.p$i popup.cpu_icon \
+    --set cpu.p$i icon.drawing=off label.padding_left=12 label.padding_right=12 \
+      label.color=$FG2
+done
 
 sep sep.r5 right
 
